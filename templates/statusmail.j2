@@ -1,0 +1,416 @@
+{#- Set dictionary for variables used in template -#}
+{%- set vars = {'alternate_row': False} -%}
+<!DOCTYPE html>
+
+<html>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+    }
+
+    h3 {
+        margin: auto;
+        text-align: center;
+    }
+
+    .bold_text {
+        font-weight: bold;
+    }
+
+    .table_history {
+        border-collapse: collapse;
+    }
+
+    .table_cell_history {
+        padding: 0px;
+    }
+
+    .table_main {
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    thead {
+        display: table-header-group;
+        vertical-align: middle;
+        border-color: inherit;
+    }
+
+    th {
+        padding: 4px 4px 4px 4px;
+        text-align: left;
+        vertical-align: middle;
+        background-color: #62acdd;
+    }
+
+    tr {
+        display: table-row;
+        vertical-align: inherit;
+        border-color: inherit;
+    }
+
+    td {
+        padding: 0px 2px 0px 2px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    table, th, td {
+        border: 1px solid rgb(92, 92, 92);
+        border-collapse: collapse;
+    }
+
+    .alternate_row {
+        background-color:#d4d4d4;
+    }
+
+    .objects_failed_cell {
+        text-align: right;
+        background-color: #ff3030;
+    }
+
+    .objects_failed_cell_summary {
+        font-weight: bold;
+        text-align: right;
+        background-color: #ff3030;
+    }
+
+    .align_right {
+        text-align: right;
+    }
+
+    .align_right_bold_text {
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .history_successful {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #73ff00;
+    }
+
+    .history_missed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ffae00;
+    }
+
+    .history_failed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ff3030;
+    }
+
+    .history_severed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #5734f3;
+    }
+
+    .history_failed_no_restart {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ff3030;
+    }
+
+    .history_restarted {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_started {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_in_progress {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_pending {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_none {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ffffff;
+    }
+
+    .missed {
+        background-color: #ffae00;
+    }
+
+    .failed {
+        background-color: #ff3030;
+    }
+
+    .failed_no_restart {
+        background-color: #ff3030;
+    }
+
+    .restarted {
+        background-color: #46cf46;
+    }
+
+    .severed {
+        background-color: #5734f3;
+    }
+
+    .started {
+        background-color: #46cf46;
+    }
+
+    .in_progress {
+        background-color: #46cf46;
+    }
+
+    .pending {
+        background-color: #46cf46;
+    }
+
+    .vm_successful {
+        background-color: #46cf46;
+    }
+
+    .vm_not_successful {
+        background-color: #ff3030;
+    }
+</style>
+
+<body>
+    {%- if pd.has_non_successful_schedules -%}
+    <h3>Client schedules which have not completed</h3>
+
+    <table class="table_main" align="center">
+        <tr>
+            <th>Nodename</th>
+            <th>Schedule</th>
+            <th>Start time</th>
+            <th>End time</th>
+            <th>Status</th>
+            <th>Return Code</th>
+            <th>15 day history</th>
+        </tr>
+        {% for item in pd.nodes %}
+        {% if item.schedules is not none %}
+        {%- for sched_stat in item.schedules.values() -%}
+        {%- if sched_stat.status is defined and sched_stat.status != ScheduleStatusEnum.SUCCESSFUL 
+            and sched_stat.schedule_name | length > 0 and not item.decomm_state -%}
+        {%- if vars.alternate_row -%}
+        {% do vars.update({'alternate_row': False}) %}
+        <tr class="alternate_row">
+        {%- else -%}
+        <tr>
+        {% do vars.update({'alternate_row': True}) %}
+        {%- endif -%}
+            <td>{{ item.name }}</td>
+            <td>{{ sched_stat.schedule_name }}</td>
+            <td>{{ sched_stat.actual_start_time }}</td>
+            <td>{{ sched_stat.end_time }}</td>
+            {%- if  sched_stat.status == ScheduleStatusEnum.MISSED -%}
+            <td class="missed">Missed</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.FAILED -%}
+            <td class="failed">Failed</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.FAILED_NO_RESTART -%}
+            <td class="failed_no_restart">Failed - no restart</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.RESTARTED -%}
+            <td class="restarted">Restarted</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.STARTED -%}
+            <td class="started">Started</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.IN_PROGRESS -%}
+            <td class="in_progress">In Progress</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.PENDING -%}
+            <td class="pending">Pending</td>
+            {%- elif  sched_stat.status == ScheduleStatusEnum.SEVERED -%}
+            <td class="severed">Severed</td>
+            {%- endif -%}
+            <td>{{ sched_stat.return_code }}</td>
+            <td class="table_cell_history">
+                <table class="table_history">
+                    <tr>
+                        {% for hist_item in sched_stat.history %}
+                        {%- if hist_item == ScheduleStatusEnum.SUCCESSFUL -%}
+                        <td class="history_successful"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.MISSED -%}
+                        <td class="history_missed"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.FAILED -%}
+                        <td class="history_failed"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.SEVERED -%}
+                        <td class="history_severed"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.FAILED_NO_RESTART -%}
+                        <td class="history_failed_no_restart"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.RESTARTED -%}
+                        <td class="history_restarted"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.STARTED -%}
+                        <td class="history_started"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.IN_PROGRESS -%}
+                        <td class="history_in_progress"> </td>
+                        {%- elif hist_item == ScheduleStatusEnum.PENDING -%}
+                        <td class="history_pending"> </td>
+                        {%- else -%}
+                        <td class="history_none"> </td>
+                        {%- endif -%}
+                        {% endfor %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        {%- endif -%}
+        {%- endfor -%}
+        {% endif %}
+        {% endfor %}
+    </table>
+    {%- endif -%}
+
+    <h3>Client activity for the last 24 hours</h3>
+
+    <table class="table_main" align="center">
+        <tr>
+            <th>Nodename</th>
+            <th>Platform</th>
+            <th>Objects inspected</th>
+            <th>Objects backed up</th>
+            <th>Objects updated</th>
+            <th>Objects expired</th>
+            <th>Objects failed</th>
+            <th>Retries</th>
+            <th>Bytes inspected (GB)</th>
+            <th>Bytes transferred (GB)</th>
+            <th>Aggregate data transfer rate (MB/sec)</th>
+            <th>Processing time</th>
+        </tr>
+        {%- for item in pd.nodes -%}
+        {# Ignore decomissioned nodes and check if any objects 
+           have been inspected -> a backup has been done. #}
+        {%- if not item.decomm_state and item.backupresult.inspected > 0 and "TDP MSSQL" not in item.platform -%}
+        {%- if vars.alternate_row -%}
+        {% do vars.update({'alternate_row': False}) %}
+        <tr class="alternate_row">
+        {%- else -%}
+        {% do vars.update({'alternate_row': True}) %}
+        <tr>
+        {%- endif -%}
+            <td>{{ item.name }}</td>
+            <td>{{ item.platform }}</td>
+            <td class="align_right">{{ item.backupresult.inspected_str }}</td>
+            <td class="align_right">{{ item.backupresult.backed_up_str }}</td>
+            <td class="align_right">{{ item.backupresult.updated_str }}</td>
+            <td class="align_right">{{ item.backupresult.expired_str }}</td>
+            {% if item.backupresult.failed > 0 %}
+            <td class="objects_failed_cell">{{ item.backupresult.failed_str }}</td>
+            {% else %}
+            <td class="align_right">{{ item.backupresult.failed_str }}</td>
+            {% endif %}
+            <td class="align_right">{{ item.backupresult.retries_str }}</td>
+            <td class="align_right">{{ item.backupresult.bytes_inspected_str }}</td>
+            <td class="align_right">{{ item.backupresult.bytes_transferred_str }}</td>
+            <td class="align_right">{{ item.backupresult.aggregate_data_rate_str }}</td>
+            <td class="align_right">{{ item.backupresult.processing_time_str }}</td>
+        </tr>
+        {%- endif -%}
+        {%- endfor -%}
+        {# Summary line at the bottom. #}
+        {%- if vars.alternate_row -%}
+        <tr class="alternate_row">
+        {%- else -%}
+        <tr>
+        {%- endif -%}
+            <td class="bold_text">Summary</td>
+            <td> </td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.inspected_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.backed_up_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.updated_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.expired_str }}</td>
+            {% if pd.client_backup_summary.failed > 0 %}
+            <td class="objects_failed_cell_summary ">{{ pd.client_backup_summary.failed_str }}</td>
+            {% else %}
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.failed_str }}</td>
+            {% endif %}
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.retries_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_inspected_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_transferred_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.aggregate_data_rate_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.processing_time_str }}</td>
+        </tr>
+    </table>
+
+    {% if pd.has_vm_backups %}
+    <h3>Summary of VM backups for the last 24 hours</h3>
+
+    <table class="table_vm" align="center">
+        <tr>
+            <th>Schedule name</th>
+            <th>VM name</th>
+            <th>Start</th>
+            <th>Stop</th>
+            <th>Elapsed time</th>
+            <th>Data amount (GB)</th>
+            <th>Success</th>
+            <th>Activity type</th>
+            <th>Node taking backup</th>
+        </tr>
+        {%- for node in pd.nodes -%}
+        {%- for item in node.vm_results -%}
+        {%- if vars.alternate_row -%}
+        {% do vars.update({'alternate_row': False}) %}
+        <tr class="alternate_row">
+        {%- else -%}
+        {% do vars.update({'alternate_row': True}) %}
+        <tr>
+        {%- endif -%}
+            <td>{{ item.schedule_name }}</td>
+            <td>{{ item.vm_name }}</td>
+            <td class="align_right">{{ item.start_time }}</td>
+            <td class="align_right">{{ item.end_time }}</td>
+            <td class="align_right">{{ item.elapsed_time_str }}</td>
+            <td class="align_right">{{ item.backed_up_bytes_str }}</td>
+            {% if item.successful %}
+            <td class="vm_successful">YES</td>
+            {% else %}
+            <td class="vm_not_successful">NO</td>
+            {% endif %}
+            <td>{{ item.activity_type }}</td>
+            <td>{{ item.entity }}</td>
+        </tr>
+        {%- endfor -%}
+        {%- endfor -%}
+        {# Summary line at the bottom. #}
+        {%- if vars.alternate_row -%}
+        <tr class="alternate_row">
+        {%- else -%}
+        <tr>
+        {%- endif -%}
+            <td class="bold_text">Summary</td>
+            <td class="align_right_bold_text"></td>
+            <td class="align_right_bold_text"></td>
+            <td class="align_right_bold_text"></td>
+            <td class="align_right_bold_text">{{ pd.vm_backup_summary.elapsed_time_str }}</td>
+            <td class="align_right_bold_text">{{ pd.vm_backup_summary.backed_up_bytes_str }}</td>
+            <td class="align_right_bold_text"></td>
+            <td class="align_right_bold_text"></td>
+            <td class="align_right_bold_text"></td>
+        </tr>
+    </table>
+
+    {% endif %}
+</body>
+</html>
