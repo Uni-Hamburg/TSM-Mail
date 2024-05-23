@@ -22,6 +22,16 @@ optional arguments:
   --disable-mail-send   disable actually sending the mails for debugging purposes
 ```
 
+### Node & Policy Domain EMail configuration
+The email addresses used for sending out the reports can be configured in two ways:
+* Inside a policy domain description field (separated by ';')
+* Inside a node contact field (separated by ';')
+
+The script determines which field to use by first checking if there are any contacts defined in the policy domain,
+otherwise it will look for email addresses in the node contact fields.
+So if a node is in a policy domain which has a contact defined and the node itself also has a contact defined,
+the nodes contact will be omitted and the policy domains contact will be used instead.
+
 ## Config 
 
 The mail generator is configured through a config.json file.
