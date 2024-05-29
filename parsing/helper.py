@@ -1,3 +1,7 @@
+"""
+Globally used helper functions are defind here.
+"""
+
 from parsing.policy_domain import PolicyDomain
 from parsing.node import Node
 from parsing.schedule_status import ScheduleStatusEnum

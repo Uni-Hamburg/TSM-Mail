@@ -1,3 +1,8 @@
+"""
+Contains the Collector class which is the interface to the TSM environment.
+The collector issues SQL queries and other TSM commands to the TSM server.
+"""
+
 import subprocess
 import logging
 from typing import Dict, List, Any
@@ -21,6 +26,7 @@ class Collector():
         self.pwd = pwd
 
     def __issue_cmd(self, cmd) -> bytearray:
+        # Sends a command to the TSM server using the admin console 'dsmadmc'.
         try:
             cmd_result = subprocess.check_output(
                 ["sudo", "dsmadmc", f"-se={self.inst}",
@@ -37,6 +43,7 @@ class Collector():
             return exception
 
     def __collect_schedule_for_node(self, node_name: str) -> List[str]:
+        # Queries all schedules for a node with node_name.
         logger.info(f"Collecting schedule status for {node_name} on {self.inst}...")
 
         sched_stat_r = self.__issue_cmd(
@@ -47,6 +54,7 @@ class Collector():
         return sched_stat_list
 
     def __collect_client_backup_result(self, node_name: str) -> List[str]:
+        # Queries client backup results for the last 24 hours for node with node_name.
         logger.info(f"Collecting client backup result for {node_name} on {self.inst}...")
 
         cl_stat_r = self.__issue_cmd("SELECT nodename, message FROM actlog " \
@@ -58,6 +66,9 @@ class Collector():
         return cl_stat_list
 
     def collect_nodes_and_domains(self) -> List[str]:
+        """
+        Runs SQL query to get all nodes and policy domains.
+        """
         nodes_r = self.__issue_cmd("SELECT n.node_name, n.platform_name, n.domain_name, " \
                                     "n.decomm_state, d.description, n.contact FROM nodes n, domains d " \
                                     "WHERE d.domain_name = n.domain_name AND n.decomm_state IS NULL")
@@ -67,6 +78,9 @@ class Collector():
         return nodes_and_domains_logs
 
     def collect_vm_schedules(self) -> List[str]:
+        """
+        Gets all status logs for the VMWare backup schedules.
+        """
         today = datetime.now()
         yesterday = today - timedelta(days=1)
 
@@ -89,6 +103,9 @@ class Collector():
         return vm_results_list
 
     def collect_schedule_logs(self, log: List[str]) -> Dict[str, List[str]]:
+        """
+        Reads and returns schedule logs for a node.
+        """
         sched_logs: Dict[str, List[str]] = {}
 
         for line in log:
@@ -103,6 +120,9 @@ class Collector():
         return sched_logs
 
     def collect_client_backup_results(self, log: List[str]) -> Dict[str, List[str]]:
+        """
+        Gets all client backup results for the last 24 hours from a node.
+        """
         cl_logs: Dict[str, List[str]] = {}
 
         for line in log:

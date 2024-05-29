@@ -1,3 +1,7 @@
+"""
+Contains the Node class which holds all relevant information for a TSM node.
+"""
+
 from typing import Dict
 from dataclasses import dataclass
 

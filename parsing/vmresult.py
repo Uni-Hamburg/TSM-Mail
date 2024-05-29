@@ -1,3 +1,8 @@
+"""
+Contains the VMResult class which holds all relevant information for a
+VMWare backup result from the TSM environment.
+"""
+
 from datetime import datetime, timedelta
 
 class VMResult:
@@ -17,8 +22,8 @@ class VMResult:
         entity:                 Name of VMWare TDP entity
     """
 
-    # Caclulate the elapsed time in the format MM:SS
     def __calculate_elapsed_time(self) -> timedelta:
+        # Caclulate the elapsed time in the format MM:SS
         start_time_d = datetime.strptime(self.start_time, "%Y-%m-%d %H:%M:%S")
         end_time_d = datetime.strptime(self.end_time, "%Y-%m-%d %H:%M:%S")
 
@@ -27,8 +32,8 @@ class VMResult:
         return time_diff
 
     def __init__(self, schedule_name: str = "", vm_name: str = "", start_time: str = "",
-                 end_time: str = "", successful: bool = False, activity: str = "", activity_type: str = "",
-                 backed_up_bytes: int = 0, entity: str = ""):
+                 end_time: str = "", successful: bool = False, activity: str = "",
+                 activity_type: str = "", backed_up_bytes: int = 0, entity: str = ""):
         self.schedule_name = schedule_name
         self.vm_name = vm_name
         self.start_time = start_time.split('.')[0] # Remove millisecs
@@ -48,22 +53,27 @@ class VMResult:
         self.update_str_representation()
 
     def __convert_notation(self, num_string: str) -> str:
-        # Convert from US notation to EU notation
+        # Convert from US notation to EU notation.
         return num_string.replace('.', 'x').replace(',', '.').replace('x', ',')
 
     def __format_backed_up_bytes(self, precision: int = 2) -> str:
+        # Format and return backed up bytes as string.
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
         size = format(self.backed_up_bytes / units[self.backed_up_bytes_unit], f",.{precision}f")
 
         return self.__convert_notation(size)
 
     def __format_elapsed_time(self) -> str:
+        # Format elapsed time for node and return as string.
         minutes, seconds = divmod(int(self.elapsed_time.total_seconds()), 60)
         hours, minutes = divmod(minutes, 60)
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     def update_str_representation(self):
+        """
+        Update string representation of numeric backup result values.
+        """
         self.backed_up_bytes_str = self.__format_backed_up_bytes()
         self.elapsed_time_str = self.__format_elapsed_time()
 

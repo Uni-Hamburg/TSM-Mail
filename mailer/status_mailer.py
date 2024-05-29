@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 status_mailer.py generates status mails from node and policy domain data
 """
@@ -43,6 +41,9 @@ class StatusMailer:
 
     def send_to(self, policy_domain: PolicyDomain, sender_addr: str, receiver_addr: str,
                 subject: str, replyto_addr: str, bcc_addr: str):
+        """
+        Renders the mail template and sends it using the smtp library.
+        """
         message = EmailMessage()
         message["Subject"] = subject
         message["From"] = sender_addr
