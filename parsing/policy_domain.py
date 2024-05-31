@@ -1,3 +1,7 @@
+"""
+Contains PolicyDomain class which contains all relevant information to a TSM policy domain.
+"""
+
 from typing import List
 from dataclasses import dataclass
 

@@ -1,3 +1,7 @@
+"""
+Contains the TSMData class, which contains all relevant information to a TSM server
+instance and relevant parsing methods for parsing the data from the server logs.
+"""
 from typing import Dict, List
 
 from parsing.helper import check_non_successful_schedules
@@ -27,6 +31,10 @@ class TSMData:
         self.vm_results: Dict[str, VMResult] = {}
 
     def parse_nodes(self, nodes_log: List[str]):
+        """
+        Parse nodes form node query logs and add to policy domain and also
+        the nodes dictionary.
+        """
         for line in nodes_log:
             # Split line using , as delimiter
             line_split = line.split(LINE_DELIM)
@@ -66,7 +74,14 @@ class TSMData:
             if domain_description_field != "":
                 self.domains[policy_domain_name].contact = domain_description_field
 
-    def parse_schedules_and_backup_results(self, sched_stat_logs: List[str], cl_stat_logs: List[str]):
+    def parse_schedules_and_backup_results(self, sched_stat_logs: List[str],
+                                           cl_stat_logs: List[str]):
+        """
+        Parse client schedules and backup results.
+        Insert parsed results into respective node and policy domain.
+        Calculate summaries for each policy domain and sort nodes by failed
+        object count (nodes with most failed objects come first in the list).
+        """
         for _, domain in self.domains.items():
             for node in domain.nodes:
                 self.__parse_node_status(domain, node, sched_stat_logs, cl_stat_logs)
@@ -90,7 +105,7 @@ class TSMData:
     def __parse_node_status(self, policy_domain: PolicyDomain, node: Node,
                             sched_stat_logs: Dict[str, List[str]],
                             cl_stat_logs: Dict[str, List[str]]):
-        # Parse results
+        # Parse results into node.
         if node.name in sched_stat_logs:
             sched_stat_log = sched_stat_logs[node.name]
 
@@ -110,6 +125,10 @@ class TSMData:
                 policy_domain.has_client_backups = True
 
     def parse_vm_schedules(self, vms_log: List[str]):
+        """
+        Parse VMWare backup schedules and insert into respective nodes.
+        Calculate VMWare backup summary for each domain.
+        """
         for line in vms_log:
             # Split line
             line_split = line.split(LINE_DELIM)

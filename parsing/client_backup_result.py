@@ -1,7 +1,13 @@
-import tabulate
+"""
+Contains the ClientBackupResult class which contains the data of a
+TSM client backup (e.g. bytes inspected, bytes transferred, processing time, etc.).
+"""
+
 import logging
 from datetime import datetime
 from typing import List
+
+import tabulate
 
 from parsing.constants import SESSION_NUM_DELIM, LINE_DELIM, COLUMN_NODE_NAME, TDP_MSSQL_STR, \
     INSPECTED_STR, BACKED_UP_STR, UPDATED_STR, EXPIRED_STR, FAILED_STR, RETRIES_STR, \
@@ -50,16 +56,17 @@ class ClientBackupResult:
 
         self.node_name = ""
 
-    # Parse memory sizes to bytes as int
     def __parse_size(self, size: str) -> float:
+        # Parse memory sizes to bytes as int
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
 
         number, unit = [string.strip() for string in size.split()]
         return float(number) * units[unit]
 
-    # Parse the elapsed time of backup schedule (format is 00:00:00 instead of elapsed seconds total)
-    # into seconds as int
     def __parse_elapsed_time(self, line: str) -> int:
+        # Parse the elapsed time of backup schedule
+        # (format is 00:00:00 instead of elapsed seconds total)
+        # into seconds as int
         line_strip = line.strip()
         line_split = line_strip.split(":")
         line_hours = int(line_split[0])
@@ -84,8 +91,9 @@ class ClientBackupResult:
         # Return timestamp with two digit numbers
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-    # Parse data from supplied log line
     def __parse_line(self, line: str, search_str: str) -> float:
+        # Parse data from supplied log line
+
         # Search for search string and return value after search string
         line_split = line.split(search_str, 1)[1]
 
@@ -133,6 +141,7 @@ class ClientBackupResult:
 
     def __parse_size_string(self, size_bytes: float, size_suffix: str, data_rate: bool = False,
                             remove_suffix: bool = False, precision: int = 2) -> str:
+        # Parses bytes as float to a size string, e.g. "300 MB/sec".
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
 
         size = format(size_bytes / units[size_suffix], f",.{precision}f")
@@ -144,6 +153,10 @@ class ClientBackupResult:
         return f"{size} {size_suffix}{'/sec' if data_rate else ''}"
 
     def parse(self, client_log: List[str]):
+        """
+        Parse data from the client backup log.
+        """
+
         # Check if client log is empty
         if len(client_log) <= 0:
             logger.info("Provided client is log empty.")
@@ -181,6 +194,9 @@ class ClientBackupResult:
         self.update_str_representation()
 
     def update_str_representation(self):
+        """
+        Update string representation of numeric backup result values.
+        """
         self.inspected_str = self.__format_num_str(self.inspected, precision=0)
         self.backed_up_str = self.__format_num_str(self.backed_up, precision=0)
         self.updated_str = self.__format_num_str(self.updated, precision=0)

@@ -1,5 +1,5 @@
 """
-constants.py contains defined constants used for parsing TSM data
+Contains defined constants used for parsing TSM data
 """
 
 # Log level strings

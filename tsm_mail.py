@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-tsm_mail.py is the main entrypoint to the tsm mail program
+Main entrypoint to the TSM mail program.
 """
 
 import getpass
@@ -35,6 +35,9 @@ from mailer.status_mailer import StatusMailer
 logger = logging.getLogger("main")
 
 def parse_contacts(contact_str: str) -> str:
+    """
+    Parse e-mail strings using regex.
+    """
     # Mail regex for validating mail addresses
     regex = r'(\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7},? *\b)+'
 
@@ -47,6 +50,10 @@ def parse_contacts(contact_str: str) -> str:
     return contacts
 
 def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDomain]:
+    """
+    Create a collection containing all nodes which have individual contacts defined
+    instead of being part of a policy domain with a defined contact.
+    """
     loose_nodes_collection: Dict[str, PolicyDomain] = {}
 
     for node in nodes:
@@ -77,6 +84,9 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
               policy_domain: PolicyDomain, sender_addr: str,
               receiver_addr: str, reply_to: str, bcc: str,
               instance: str, time_string: str):
+    """
+    Create mail subject and call mailer to send mail.
+    """
     if not policy_domain.has_client_backups and not policy_domain.has_vm_backups:
         logger.info(f"No backups in 24 hours detected for {policy_domain.name}.")
     else:
@@ -94,6 +104,9 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
 
 def send_mail_reports(config: Dict[str, Any],
                       data: Dict[str, TSMData]):
+    """
+    Prepare and send mails using the StatusMailer class.
+    """
     mailer = StatusMailer(config["mail_server_host"],
                           config["mail_server_port"],
                           config["mail_template_path"])
@@ -133,6 +146,10 @@ def send_mail_reports(config: Dict[str, Any],
                       contact, reply_to, bcc, inst, time_string)
 
 def get_password(config: Dict[str, Any]) -> str:
+    """
+    Try to read the password file, otherwise read it directly
+    from user input using getpass.
+    """
     if config["tsm_password_file"] != "":
         if os.path.isfile(config["tsm_password_file"]):
             with open(config["tsm_password_file"], "r") as pwd_file:
@@ -147,6 +164,9 @@ def get_password(config: Dict[str, Any]) -> str:
     return pwd
 
 def load_config(path: str) -> Dict[str, Any]:
+    """
+    Load the configuration json file.
+    """
     if os.path.isfile(path):
         with open(path, "r") as cfg_file:
             print("Loaded config from config.json")
@@ -156,6 +176,10 @@ def load_config(path: str) -> Dict[str, Any]:
         sys.exit(1)
 
 def setup_logger(config: Dict[str, Any]):
+    """
+    Set up the logger, checking and setting log level and log formatting.
+    Also configure rotating logs to preserve disk space.
+    """
     logger = logging.getLogger("main")
 
     log_level = None
@@ -201,6 +225,9 @@ def setup_logger(config: Dict[str, Any]):
         logger.addHandler(file_handler)
 
 def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
+    """
+    Render and export all reports to HTML files which have been parsed from the TSM data. 
+    """
     template_file_loader = FileSystemLoader(os.path.dirname(config["mail_template_path"]))
     template_env = Environment(loader=template_file_loader, extensions=['jinja2.ext.do'])
 
@@ -219,6 +246,10 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
                 file.write(html_test_render)
 
 def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str):
+    """
+    Collect and parse all data from a TSM server instance using the Collector class and
+    parsing methods from TSMData class.
+    """
     collector = Collector(config, inst, pwd)
     # Collect overall data from the environment
     nodes_and_domains = collector.collect_nodes_and_domains()
@@ -238,6 +269,9 @@ def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str):
     return data
 
 def main():
+    """
+    Main entrypoint.
+    """
     data: Dict[str, TSMData] = {}
     pwd = ""
 

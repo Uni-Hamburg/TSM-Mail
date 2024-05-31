@@ -1,3 +1,11 @@
+"""
+Contains ScheduleStatus class which contains all relevant information for
+a TSM client schedule. The status itself is coded in the ScheduleStatusEnum,
+also defined here.
+The schedule status data is parsed using the ScheduleStatusParser,
+which is defined here aswell.
+"""
+
 import logging
 from datetime import datetime
 from enum import Enum, auto
@@ -93,6 +101,9 @@ class SchedulesParser:
         return line.split(LINE_DELIM)[COLUMN_QE_STATUS].strip()
 
     def parse(self, server_log: List[str]) -> Dict[str, ScheduleStatus]:
+        """
+        Parse client schedules from the server logs.
+        """
         scheds: Dict[str, ScheduleStatus] = {}
 
         # Remove "Future" schedule from list as it is
