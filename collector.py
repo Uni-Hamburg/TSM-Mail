@@ -29,7 +29,7 @@ class Collector():
         # Sends a command to the TSM server using the admin console 'dsmadmc'.
         try:
             cmd_result = subprocess.check_output(
-                ["sudo", "dsmadmc", f"-se={self.inst}",
+                ["dsmadmc", f"-se={self.inst}",
                  f"-id={self.config['tsm_user']}", f"-password={self.pwd}",
                  "-dataonly=yes", "-comma", "-out", cmd])
             return cmd_result
