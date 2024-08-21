@@ -29,12 +29,13 @@ class StatusMailer:
 
         # Load jinja2 mail HTML template
         self.__template_file_loader = FileSystemLoader(os.path.dirname(template_path))
-        self.__template_env = Environment(loader=self.__template_file_loader, extensions=['jinja2.ext.do'])
+        self.__template_env = Environment(loader=self.__template_file_loader,
+                                          extensions=['jinja2.ext.do'])
 
         self.__template = self.__template_env.get_template(os.path.basename(template_path))
         self.__template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
 
-        logger.debug(f"Connecting to {self.__smtp_host} at port {self.__smtp_port}...")
+        logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
         # Establish connection to the SMTP server
         self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
         self.__smtp_conn.starttls()
@@ -66,5 +67,5 @@ class StatusMailer:
         message.add_header('X-Auto-Response-Suppress', 'All')
         message.set_payload(message_html)
 
-        logger.info(f"Sending report for {policy_domain.name} to {receiver_addr}.")
+        logger.info("Sending report for %s to %s.", policy_domain.name, receiver_addr)
         self.__smtp_conn.send_message(message)

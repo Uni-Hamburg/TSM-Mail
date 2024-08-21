@@ -7,11 +7,13 @@ import logging
 import multiprocessing as mp
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 
 from parsing.constants import LINE_DELIM, COLUMN_NODE_NAME
 
 logger = logging.getLogger("main")
 
+@dataclass
 class CollectorConfig():
     """
     CollectorConfig contains necessary information to fetch data from the ISP / TSM environment.
@@ -36,18 +38,18 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytearray:
         return cmd_result
     except subprocess.CalledProcessError as exception:
         if "ANR2034E" in str(exception.output):
-            logger.info(f'Query "{cmd}" \nreturned error: " \
-                        {exception.output}", returning empty string.')
+            logger.info('Query "%s" \nreturned error: "%s", \
+                        returning empty string.', cmd, exception.output)
             return bytearray()
 
-        logger.error(f"Error calling dsmadmc: {exception.output}")
+        logger.error("Error calling dsmadmc: %s", exception.output)
         return exception
 
 def __collect_schedule_for_node(config: CollectorConfig,
                                 sched_logs: Dict[str, List[str]],
                                 node_name: str):
     # Queries all schedules for a node with node_name.
-    logger.info(f"Collecting schedule status for {node_name} on {config.inst}...")
+    logger.info("Collecting schedule status for %s on %s...", node_name, config.inst)
 
     sched_stat_r = __issue_cmd(config,
         f"QUERY EVENT * * node={node_name} f=d begint=now endd=today begind=-15")
@@ -62,7 +64,7 @@ def __collect_client_backup_result(config: CollectorConfig,
                                    cl_logs: Dict[str, List[str]],
                                    node_name: str):
     # Queries client backup results for the last 24 hours for node with node_name.
-    logger.info(f"Collecting client backup result for {node_name} on {config.inst}...")
+    logger.info("Collecting client backup result for %s on %s...", node_name, config.inst)
 
     cl_stat_r = __issue_cmd(config, "SELECT nodename, message FROM actlog " \
                                   "WHERE originator = 'CLIENT' " \
@@ -96,7 +98,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     today_str = today.strftime("%Y-%m-%d %H:%M:%S")
     yesterday_str = yesterday.strftime("%Y-%m-%d %H:%M:%S")
 
-    logger.info(f"Collecting VM schedules on {config.inst}...")
+    logger.info("Collecting VM schedules on %s...", config.inst)
 
     vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, " \
                                      "successful, activity, activity_type, bytes, entity " \
@@ -107,7 +109,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     vm_results_str = vm_results_r.decode("utf-8", "replace")
     vm_results_list = vm_results_str.splitlines()
 
-    logger.info(f"Collected VM schedule data for {len(vm_results_list)} VMs.")
+    logger.info("Collected VM schedule data for %d VMs.", len(vm_results_list))
 
     return vm_results_list
 
