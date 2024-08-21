@@ -5,6 +5,7 @@ The collector issues SQL queries and other TSM commands to the TSM server.
 
 import subprocess
 import logging
+import multiprocessing as mp
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
 
@@ -42,7 +43,7 @@ class Collector():
             logger.error(f"Error calling dsmadmc: {exception.output}")
             return exception
 
-    def __collect_schedule_for_node(self, node_name: str) -> List[str]:
+    def __collect_schedule_for_node(self, sched_logs: Dict[str, List[str]], node_name: str):
         # Queries all schedules for a node with node_name.
         logger.info(f"Collecting schedule status for {node_name} on {self.inst}...")
 
@@ -51,9 +52,11 @@ class Collector():
         sched_stat_str = sched_stat_r.decode("utf-8", "replace")
         sched_stat_list = sched_stat_str.splitlines()
 
-        return sched_stat_list
+        # Don't add empty logs
+        if len(sched_stat_list) > 0:
+            sched_logs[node_name] = sched_stat_list
 
-    def __collect_client_backup_result(self, node_name: str) -> List[str]:
+    def __collect_client_backup_result(self, cl_logs: Dict[str, List[str]], node_name: str):
         # Queries client backup results for the last 24 hours for node with node_name.
         logger.info(f"Collecting client backup result for {node_name} on {self.inst}...")
 
@@ -63,7 +66,9 @@ class Collector():
                                     AND nodename = '{node_name}'")
         cl_stat_list = cl_stat_r.decode("utf-8", "replace").splitlines()
 
-        return cl_stat_list
+        # Don't add empty logs
+        if len(cl_stat_list) > 0:
+            cl_logs[node_name] = cl_stat_list
 
     def collect_nodes_and_domains(self) -> List[str]:
         """
@@ -106,16 +111,21 @@ class Collector():
         """
         Reads and returns schedule logs for a node.
         """
-        sched_logs: Dict[str, List[str]] = {}
+        sched_logs_manager = mp.Manager()
+        sched_logs = sched_logs_manager.dict()
+
+        nodes: List[str] = []
 
         for line in log:
-            node = line.split(LINE_DELIM)[COLUMN_NODE_NAME]
+            nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])
 
-            sched_log = self.__collect_schedule_for_node(node)
+        # TODO: Check if process count for the pool can be optimized
+        pool = mp.Pool()
 
-            # Don't add empty logs
-            if len(sched_log) > 0:
-                sched_logs[node] = sched_log
+        pool.starmap(self.__collect_schedule_for_node,
+                     [(self, sched_logs, node_name) for node_name in nodes])
+        pool.close()
+        pool.join()
 
         return sched_logs
 
@@ -123,15 +133,20 @@ class Collector():
         """
         Gets all client backup results for the last 24 hours from a node.
         """
-        cl_logs: Dict[str, List[str]] = {}
+        cl_logs_manager = mp.Manager()
+        cl_logs = cl_logs_manager.dict()
+
+        nodes: List[str] = []
 
         for line in log:
-            node = line.split(LINE_DELIM)[COLUMN_NODE_NAME]
+            nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])
 
-            cl_log = self.__collect_client_backup_result(node)
+        # TODO: Check if process count for the pool can be optimized
+        pool = mp.Pool()
 
-            # Don't add empty logs
-            if len(cl_log) > 0:
-                cl_logs[node] = cl_log
+        pool.starmap(self.__collect_client_backup_result,
+                     [(self, cl_logs, node_name) for node_name in nodes])
+        pool.close()
+        pool.join()
 
         return cl_logs
