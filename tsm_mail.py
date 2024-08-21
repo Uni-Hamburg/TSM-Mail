@@ -28,7 +28,8 @@ from parsing.schedule_status import ScheduleStatusEnum
 from parsing.constants import LOG_LEVEL_DEBUG_STR, LOG_LEVEL_ERROR_STR, LOG_LEVEL_INFO_STR, \
     LOG_LEVEL_WARN_STR
 
-from collector import Collector
+from collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
+    collect_client_backup_results, collect_schedule_logs
 
 from mailer.status_mailer import StatusMailer
 
@@ -250,14 +251,14 @@ def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str):
     Collect and parse all data from a TSM server instance using the Collector class and
     parsing methods from TSMData class.
     """
-    collector = Collector(config, inst, pwd)
+    collector_config = CollectorConfig(config, inst, pwd)
     # Collect overall data from the environment
-    nodes_and_domains = collector.collect_nodes_and_domains()
-    vms_list = collector.collect_vm_schedules()
+    nodes_and_domains = collect_nodes_and_domains(collector_config)
+    vms_list = collect_vm_schedules(collector_config)
 
     # Collect logs for each node
-    node_schedule_logs = collector.collect_schedule_logs(nodes_and_domains)
-    client_backup_logs = collector.collect_client_backup_results(nodes_and_domains)
+    node_schedule_logs = collect_schedule_logs(collector_config, nodes_and_domains)
+    client_backup_logs = collect_client_backup_results(collector_config, nodes_and_domains)
 
     data = TSMData()
 
