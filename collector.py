@@ -1,10 +1,10 @@
 """
-Contains the Collector class which is the interface to the TSM environment.
-The collector issues SQL queries and other TSM commands to the TSM server.
+Contains functions to interface with the TSM environment through the admin console (dsmadmc).
 """
 
 import subprocess
 import logging
+import multiprocessing as mp
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
 
@@ -12,126 +12,137 @@ from parsing.constants import LINE_DELIM, COLUMN_NODE_NAME
 
 logger = logging.getLogger("main")
 
-class Collector():
+class CollectorConfig():
     """
-    Collector class contains multiple functions to fetch data from the ISP / TSM environment.
+    CollectorConfig contains necessary information to fetch data from the ISP / TSM environment.
     Args:
         config: Software configuration (config.json)
         inst: The ISP server / instance to fetch data from
         pwd: The password for the user to fetch the data with
     """
     def __init__(self, config: Dict[str, Any], inst: str, pwd: str):
-        self.config = config
+        self.app_config = config
         self.inst = inst
         self.pwd = pwd
 
-    def __issue_cmd(self, cmd) -> bytearray:
-        # Sends a command to the TSM server using the admin console 'dsmadmc'.
-        try:
-            cmd_result = subprocess.check_output(
-                ["dsmadmc", f"-se={self.inst}",
-                 f"-id={self.config['tsm_user']}", f"-password={self.pwd}",
-                 "-dataonly=yes", "-comma", "-out", cmd])
-            return cmd_result
-        except subprocess.CalledProcessError as exception:
-            if "ANR2034E" in str(exception.output):
-                logger.info(f'Query "{cmd}" \nreturned error: " \
-                            {exception.output}", returning empty string.')
-                return bytearray()
 
-            logger.error(f"Error calling dsmadmc: {exception.output}")
-            return exception
+def __issue_cmd(config: CollectorConfig, cmd: str) -> bytearray:
+    # Sends a command to the TSM server using the admin console 'dsmadmc'.
+    try:
+        cmd_result = subprocess.check_output(
+            ["dsmadmc", f"-se={config.inst}",
+             f"-id={config.app_config['tsm_user']}", f"-password={config.pwd}",
+             "-dataonly=yes", "-comma", "-out", cmd])
+        return cmd_result
+    except subprocess.CalledProcessError as exception:
+        if "ANR2034E" in str(exception.output):
+            logger.info(f'Query "{cmd}" \nreturned error: " \
+                        {exception.output}", returning empty string.')
+            return bytearray()
 
-    def __collect_schedule_for_node(self, node_name: str) -> List[str]:
-        # Queries all schedules for a node with node_name.
-        logger.info(f"Collecting schedule status for {node_name} on {self.inst}...")
+        logger.error(f"Error calling dsmadmc: {exception.output}")
+        return exception
 
-        sched_stat_r = self.__issue_cmd(
-            f"QUERY EVENT * * node={node_name} f=d begint=now endd=today begind=-15")
-        sched_stat_str = sched_stat_r.decode("utf-8", "replace")
-        sched_stat_list = sched_stat_str.splitlines()
+def __collect_schedule_for_node(config: CollectorConfig,
+                                sched_logs: Dict[str, List[str]],
+                                node_name: str):
+    # Queries all schedules for a node with node_name.
+    logger.info(f"Collecting schedule status for {node_name} on {config.inst}...")
 
-        return sched_stat_list
+    sched_stat_r = __issue_cmd(config,
+        f"QUERY EVENT * * node={node_name} f=d begint=now endd=today begind=-15")
+    sched_stat_str = sched_stat_r.decode("utf-8", "replace")
+    sched_stat_list = sched_stat_str.splitlines()
 
-    def __collect_client_backup_result(self, node_name: str) -> List[str]:
-        # Queries client backup results for the last 24 hours for node with node_name.
-        logger.info(f"Collecting client backup result for {node_name} on {self.inst}...")
+    # Don't add empty logs
+    if len(sched_stat_list) > 0:
+        sched_logs[node_name] = sched_stat_list
 
-        cl_stat_r = self.__issue_cmd("SELECT nodename, message FROM actlog " \
-                                    "WHERE originator = 'CLIENT' " \
-                                    f"AND date_time>current_timestamp - 24 hours \
-                                    AND nodename = '{node_name}'")
-        cl_stat_list = cl_stat_r.decode("utf-8", "replace").splitlines()
+def __collect_client_backup_result(config: CollectorConfig,
+                                   cl_logs: Dict[str, List[str]],
+                                   node_name: str):
+    # Queries client backup results for the last 24 hours for node with node_name.
+    logger.info(f"Collecting client backup result for {node_name} on {config.inst}...")
 
-        return cl_stat_list
+    cl_stat_r = __issue_cmd(config, "SELECT nodename, message FROM actlog " \
+                                  "WHERE originator = 'CLIENT' " \
+                                  f"AND date_time>current_timestamp - 24 hours \
+                                  AND nodename = '{node_name}'")
+    cl_stat_list = cl_stat_r.decode("utf-8", "replace").splitlines()
 
-    def collect_nodes_and_domains(self) -> List[str]:
-        """
-        Runs SQL query to get all nodes and policy domains.
-        """
-        nodes_r = self.__issue_cmd("SELECT n.node_name, n.platform_name, n.domain_name, " \
-                                    "n.decomm_state, d.description, n.contact FROM nodes n, domains d " \
-                                    "WHERE d.domain_name = n.domain_name AND n.decomm_state IS NULL")
-        nodes_str = nodes_r.decode("utf-8", "replace")
-        nodes_and_domains_logs = nodes_str.splitlines()
+    # Don't add empty logs
+    if len(cl_stat_list) > 0:
+        cl_logs[node_name] = cl_stat_list
 
-        return nodes_and_domains_logs
+def collect_nodes_and_domains(config: CollectorConfig) -> List[str]:
+    """
+    Runs SQL query to get all nodes and policy domains.
+    """
+    nodes_r = __issue_cmd(config, "SELECT n.node_name, n.platform_name, n.domain_name, " \
+                                "n.decomm_state, d.description, n.contact FROM nodes n, domains d " \
+                                "WHERE d.domain_name = n.domain_name AND n.decomm_state IS NULL")
+    nodes_str = nodes_r.decode("utf-8", "replace")
+    nodes_and_domains_logs = nodes_str.splitlines()
 
-    def collect_vm_schedules(self) -> List[str]:
-        """
-        Gets all status logs for the VMWare backup schedules.
-        """
-        today = datetime.now()
-        yesterday = today - timedelta(days=1)
+    return nodes_and_domains_logs
 
-        today_str = today.strftime("%Y-%m-%d %H:%M:%S")
-        yesterday_str = yesterday.strftime("%Y-%m-%d %H:%M:%S")
+def collect_vm_schedules(config: CollectorConfig) -> List[str]:
+    """
+    Gets all status logs for the VMWare backup schedules.
+    """
+    today = datetime.now()
+    yesterday = today - timedelta(days=1)
 
-        logger.info(f"Collecting VM schedules on {self.inst}...")
+    today_str = today.strftime("%Y-%m-%d %H:%M:%S")
+    yesterday_str = yesterday.strftime("%Y-%m-%d %H:%M:%S")
 
-        vm_results_r = self.__issue_cmd("SELECT schedule_name, sub_entity, start_time, end_time, " \
-                                "successful, activity, activity_type, bytes, entity " \
-                                f"FROM summary_extended WHERE (activity_details='VMware' \
-                                OR activity_details LIKE '%Hyper%') AND start_time \
-                                BETWEEN '{yesterday_str}' AND '{today_str}'")
+    logger.info(f"Collecting VM schedules on {config.inst}...")
 
-        vm_results_str = vm_results_r.decode("utf-8", "replace")
-        vm_results_list = vm_results_str.splitlines()
+    vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, " \
+                                     "successful, activity, activity_type, bytes, entity " \
+                                     f"FROM summary_extended WHERE (activity_details='VMware' \
+                                     OR activity_details LIKE '%Hyper%') AND start_time \
+                                     BETWEEN '{yesterday_str}' AND '{today_str}'")
 
-        logger.info(f"Collected VM schedule data for {len(vm_results_list)} VMs.")
+    vm_results_str = vm_results_r.decode("utf-8", "replace")
+    vm_results_list = vm_results_str.splitlines()
 
-        return vm_results_list
+    logger.info(f"Collected VM schedule data for {len(vm_results_list)} VMs.")
 
-    def collect_schedule_logs(self, log: List[str]) -> Dict[str, List[str]]:
-        """
-        Reads and returns schedule logs for a node.
-        """
-        sched_logs: Dict[str, List[str]] = {}
+    return vm_results_list
 
-        for line in log:
-            node = line.split(LINE_DELIM)[COLUMN_NODE_NAME]
+def collect_schedule_logs(config: CollectorConfig, log: List[str]) -> Dict[str, List[str]]:
+    """
+    Reads and returns schedule logs for a node.
+    """
+    sched_logs_manager = mp.Manager()
+    sched_logs = sched_logs_manager.dict()
 
-            sched_log = self.__collect_schedule_for_node(node)
+    nodes: List[str] = []
 
-            # Don't add empty logs
-            if len(sched_log) > 0:
-                sched_logs[node] = sched_log
+    for line in log:
+        nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])
 
-        return sched_logs
+    with mp.Pool() as pool:
+        pool.starmap(__collect_schedule_for_node,
+                     [(config, sched_logs, node_name) for node_name in nodes])
 
-    def collect_client_backup_results(self, log: List[str]) -> Dict[str, List[str]]:
-        """
-        Gets all client backup results for the last 24 hours from a node.
-        """
-        cl_logs: Dict[str, List[str]] = {}
+    return sched_logs
 
-        for line in log:
-            node = line.split(LINE_DELIM)[COLUMN_NODE_NAME]
+def collect_client_backup_results(config: CollectorConfig, log: List[str]) -> Dict[str, List[str]]:
+    """
+    Gets all client backup results for the last 24 hours from a node.
+    """
+    cl_logs_manager = mp.Manager()
+    cl_logs = cl_logs_manager.dict()
 
-            cl_log = self.__collect_client_backup_result(node)
+    nodes: List[str] = []
 
-            # Don't add empty logs
-            if len(cl_log) > 0:
-                cl_logs[node] = cl_log
+    for line in log:
+        nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])
 
-        return cl_logs
+    with mp.Pool() as pool:
+        pool.starmap(__collect_client_backup_result,
+                     [(config, cl_logs, node_name) for node_name in nodes])
+
+    return cl_logs
