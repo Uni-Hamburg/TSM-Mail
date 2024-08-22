@@ -52,7 +52,8 @@ def __collect_schedule_for_node(config: CollectorConfig,
     logger.info("Collecting schedule status for %s on %s...", node_name, config.inst)
 
     sched_stat_r = __issue_cmd(config,
-        f"QUERY EVENT * * node={node_name} f=d begint=now endd=today begind=-15")
+                               f"QUERY EVENT * * node={node_name} " \
+                                "f=d begint=now endd=today begind=-15")
     sched_stat_str = sched_stat_r.decode("utf-8", "replace")
     sched_stat_list = sched_stat_str.splitlines()
 
@@ -67,9 +68,9 @@ def __collect_client_backup_result(config: CollectorConfig,
     logger.info("Collecting client backup result for %s on %s...", node_name, config.inst)
 
     cl_stat_r = __issue_cmd(config, "SELECT nodename, message FROM actlog " \
-                                  "WHERE originator = 'CLIENT' " \
-                                  f"AND date_time>current_timestamp - 24 hours \
-                                  AND nodename = '{node_name}'")
+                                    "WHERE originator = 'CLIENT' " \
+                                    f"AND date_time>current_timestamp - 24 hours \
+                                    AND nodename = '{node_name}'")
     cl_stat_list = cl_stat_r.decode("utf-8", "replace").splitlines()
 
     # Don't add empty logs
@@ -81,8 +82,8 @@ def collect_nodes_and_domains(config: CollectorConfig) -> List[str]:
     Runs SQL query to get all nodes and policy domains.
     """
     nodes_r = __issue_cmd(config, "SELECT n.node_name, n.platform_name, n.domain_name, " \
-                                "n.decomm_state, d.description, n.contact FROM nodes n, domains d " \
-                                "WHERE d.domain_name = n.domain_name AND n.decomm_state IS NULL")
+                                  "n.decomm_state, d.description, n.contact FROM nodes n, domains d " \
+                                  "WHERE d.domain_name = n.domain_name AND n.decomm_state IS NULL")
     nodes_str = nodes_r.decode("utf-8", "replace")
     nodes_and_domains_logs = nodes_str.splitlines()
 
@@ -101,10 +102,10 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     logger.info("Collecting VM schedules on %s...", config.inst)
 
     vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, " \
-                                     "successful, activity, activity_type, bytes, entity " \
-                                     f"FROM summary_extended WHERE (activity_details='VMware' \
-                                     OR activity_details LIKE '%Hyper%') AND start_time \
-                                     BETWEEN '{yesterday_str}' AND '{today_str}'")
+                                       "successful, activity, activity_type, bytes, entity " \
+                                       f"FROM summary_extended WHERE (activity_details='VMware' \
+                                       OR activity_details LIKE '%Hyper%') AND start_time \
+                                       BETWEEN '{yesterday_str}' AND '{today_str}'")
 
     vm_results_str = vm_results_r.decode("utf-8", "replace")
     vm_results_list = vm_results_str.splitlines()
