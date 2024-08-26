@@ -18,7 +18,7 @@ class CollectorConfig():
     """
     CollectorConfig contains necessary information to fetch data from the ISP / TSM environment.
     Args:
-        config: Software configuration (config.json)
+        config: Software configuration (config file)
         inst: The ISP server / instance to fetch data from
         pwd: The password for the user to fetch the data with
     """

@@ -11,12 +11,12 @@ import sys
 import pickle
 import logging
 import logging.handlers
-import json
 import argparse
 from string import Template
 from typing import Dict, List, Any
 from datetime import datetime
 
+import yaml
 from jinja2 import Environment, FileSystemLoader
 
 from parsing.helper import check_non_successful_schedules
@@ -153,7 +153,7 @@ def get_password(config: Dict[str, Any]) -> str:
     """
     if config["tsm_password_file"] != "":
         if os.path.isfile(config["tsm_password_file"]):
-            with open(config["tsm_password_file"], "r") as pwd_file:
+            with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
                 pwd = pwd_file.read()
         else:
             logger.error('Password file "%s" supplied in config does not exist.',
@@ -166,14 +166,18 @@ def get_password(config: Dict[str, Any]) -> str:
 
 def load_config(path: str) -> Dict[str, Any]:
     """
-    Load the configuration json file.
+    Load the configuration file.
     """
     if os.path.isfile(path):
         with open(path, "r", encoding="utf-8") as cfg_file:
-            print("Loaded config from config.json")
-            return json.load(cfg_file)
+            try:
+                print(f"Loaded config from {path}")
+                return yaml.safe_load(cfg_file)
+            except yaml.YAMLError as exc:
+                print(exc)
+                sys.exit(1)
     else:
-        print("ERROR: No config.json, file missing.")
+        print(f"ERROR: {path} not found.")
         sys.exit(1)
 
 def setup_logger(config: Dict[str, Any]):
@@ -181,19 +185,18 @@ def setup_logger(config: Dict[str, Any]):
     Set up the logger, checking and setting log level and log formatting.
     Also configure rotating logs to preserve disk space.
     """
-    logger = logging.getLogger("main")
+    log_levels = {
+        LOG_LEVEL_DEBUG_STR: logging.DEBUG,
+        LOG_LEVEL_INFO_STR: logging.INFO,
+        LOG_LEVEL_WARN_STR: logging.WARN,
+        LOG_LEVEL_ERROR_STR: logging.ERROR
+    }
 
     log_level = None
 
     if "log_level" in config:
-        if config["log_level"].upper() == LOG_LEVEL_DEBUG_STR:
-            log_level = logging.DEBUG
-        elif config["log_level"].upper() == LOG_LEVEL_INFO_STR:
-            log_level = logging.INFO
-        elif config["log_level"].upper() == LOG_LEVEL_WARN_STR:
-            log_level = logging.WARN
-        elif config["log_level"].upper() == LOG_LEVEL_ERROR_STR:
-            log_level = logging.ERROR
+        if config["log_level"] in log_levels:
+            log_level = log_levels[config["log_level"]]
         else:
             raise ValueError(f'ERROR: log_level "{config["log_level"]}" \
                               not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
@@ -204,11 +207,11 @@ def setup_logger(config: Dict[str, Any]):
     logger.setLevel(log_level)
 
     formatter = logging.Formatter("[%(levelname)s] %(asctime)s, %(module)s: %(message)s")
-    format_handler = logging.StreamHandler()
-    format_handler.setLevel(log_level)
-    format_handler.setFormatter(formatter)
+    stdout_handler = logging.StreamHandler()
+    stdout_handler.setLevel(log_level)
+    stdout_handler.setFormatter(formatter)
 
-    logger.addHandler(format_handler)
+    logger.addHandler(stdout_handler)
 
     if "log_path" in config:
         if config["log_rotate"]:
@@ -282,7 +285,7 @@ def main():
                      reports of an IBM TSM / ISP environment.")
 
     argparser.add_argument("-c", "--config", # Config file argument
-                           metavar="PATH", help="path to config.json file", required=True)
+                           metavar="PATH", help="path to config file", required=True)
     argparser.add_argument("-p", "--pickle", action="store", type=str,
                            metavar="PATH", help="the pickle argument determines if the \
                             fetched TSM reports should be saved to file for quicker \
@@ -303,7 +306,8 @@ def main():
     if args.pickle:
         if os.path.isfile(args.pickle):
             logger.info("Pickled data found in %s. Loading...", args.pickle)
-            data = pickle.load(open(args.pickle, "rb"))
+            with open(args.pickle, "rb") as pickle_file:
+                data = pickle.load(pickle_file)
         else:
             logger.warning("%s not found!", args.pickle)
     else:
@@ -321,7 +325,8 @@ def main():
 
     if args.pickle:
         logger.info("Pickling data to %s", args.pickle)
-        pickle.dump(data, open(args.pickle, "wb"))
+        with open(args.pickle, "wb") as pickle_file:
+            pickle.dump(data, pickle_file)
 
 if __name__ == "__main__":
     main()

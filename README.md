@@ -14,7 +14,7 @@ TSM Mail generates and distributes HTML reports of an IBM TSM / ISP environment.
 optional arguments:
   -h, --help            show this help message and exit
   -c PATH, --config PATH
-                        path to config.json file
+                        path to config file
   -p PATH, --pickle PATH
                         the pickle argument determines if the fetched TSM reports should be saved to file for quicker loading times while debugging.
                         NOTE: To fetch a new report, delete the pickle file or supply a different path to the argument
@@ -34,7 +34,7 @@ the nodes contact will be omitted and the policy domains contact will be used in
 
 ## Config 
 
-The mail generator is configured through a config.json file.
+The mail generator is configured through a config yaml file.
 Below an explanation for every config entry.
 
 `tsm_user`: Username used to connect to TSM. (`str`) \
@@ -68,26 +68,23 @@ Below an explanation for every config entry.
 ### Config template
 
 ```
-{
-    "tsm_user": "MAILER",
-    "tsm_password_file": "./pwd.txt",
+tsm_user: "MAILER"
+tsm_password_file: "./pwd.txt"
 
-    "mail_server_host": "mail-serv.com",
-    "mail_server_port": 25,
+mail_server_host: "mail-serv.com"
+mail_server_port: 25
 
-    "mail_subject_template": "ISP: $status for $tsm_inst at $time for $pd_name",
-    "mail_from_addr": "backup@company.org",
+mail_subject_template: "ISP: $status for $tsm_inst at $time for $pd_name"
+mail_from_addr: "backup@company.org"
 
-    "mail_template_path": "./templates/statusmail.j2",
+mail_template_path: "./templates/statusmail.j2"
 
-    "log_level": "ERROR",
-    "log_path": "./tsm_mail.log",
-    "log_rotate": true,
+log_level: "ERROR"
+log_path: "./tsm_mail.log"
+log_rotate: true
 
-    "tsm_instances": [
-        "tsmsrv1",
-        "tsmsrv2",
-        "tsmsrv3"
-    ]
-}
+tsm_instances:
+    - "tsmsrv1"
+    - "tsmsrv2"
+    - "tsmsrv3"
 ```

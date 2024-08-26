@@ -134,7 +134,7 @@ class ClientBackupResult:
 
     def __format_num_str(self, num: float, precision: int = 2) -> str:
         if precision == 0:
-            num_format = format(int(num), f",d")
+            num_format = format(int(num), ",d")
         else:
             num_format = format(num, f",.{precision}f")
         return self.__convert_notation(num_format)

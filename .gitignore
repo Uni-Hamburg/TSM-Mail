@@ -200,3 +200,7 @@ pyrightconfig.json
 
 # json
 *.json
+
+# yaml
+*.yaml
+*.yml
