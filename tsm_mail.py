@@ -45,7 +45,7 @@ def parse_contacts(contact_str: str) -> str:
     contacts = contact_str.replace(";", ",")
 
     if not re.fullmatch(regex, contacts):
-        logger.error(f"Error validating mail address: {contacts}. Mail address is not valid.")
+        logger.error("Error validating mail address: %s. Mail address is not valid.", contacts)
         return None
 
     return contacts
@@ -89,11 +89,11 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
     Create mail subject and call mailer to send mail.
     """
     if not policy_domain.has_client_backups and not policy_domain.has_vm_backups:
-        logger.info(f"No backups in 24 hours detected for {policy_domain.name}.")
+        logger.info("No backups in 24 hours detected for %s.", policy_domain.name)
     else:
         subject_template = Template(config["mail_subject_template"])
 
-        logger.info(f"Parsing mail template for {receiver_addr}.")
+        logger.info("Parsing mail template for %s.", receiver_addr)
         subject = subject_template.substitute({
             "status": "OKAY" if not policy_domain.has_non_successful_schedules else "WARN",
             "tsm_inst": instance,
@@ -156,8 +156,8 @@ def get_password(config: Dict[str, Any]) -> str:
             with open(config["tsm_password_file"], "r") as pwd_file:
                 pwd = pwd_file.read()
         else:
-            logger.error(f'Password file "{config["tsm_password_file"]}" \
-                          supplied in config does not exist.')
+            logger.error('Password file "%s" supplied in config does not exist.',
+                         config["tsm_password_file"])
             sys.exit(1)
     else:
         pwd = getpass.getpass()
@@ -169,7 +169,7 @@ def load_config(path: str) -> Dict[str, Any]:
     Load the configuration json file.
     """
     if os.path.isfile(path):
-        with open(path, "r") as cfg_file:
+        with open(path, "r", encoding="utf-8") as cfg_file:
             print("Loaded config from config.json")
             return json.load(cfg_file)
     else:
@@ -243,10 +243,10 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
         for policy_domain in data[inst].domains.values():
             html_test_render = template.render(pd=policy_domain)
 
-            with open(f"{inst}_{policy_domain.name}_report.html", "w") as file:
+            with open(f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8") as file:
                 file.write(html_test_render)
 
-def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str):
+def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str) -> TSMData:
     """
     Collect and parse all data from a TSM server instance using the Collector class and
     parsing methods from TSMData class.
@@ -302,10 +302,10 @@ def main():
 
     if args.pickle:
         if os.path.isfile(args.pickle):
-            logger.info(f"Pickled data found in {args.pickle}. Loading...")
+            logger.info("Pickled data found in %s. Loading...", args.pickle)
             data = pickle.load(open(args.pickle, "rb"))
         else:
-            logger.warning(f"{args.pickle} not found!")
+            logger.warning("%s not found!", args.pickle)
     else:
         logger.info("No pickled data supplied, fetching from TSM.")
 
@@ -320,7 +320,7 @@ def main():
         export_to_html(config, data)
 
     if args.pickle:
-        logger.info(f"Pickling data to {args.pickle}")
+        logger.info("Pickling data to %s", args.pickle)
         pickle.dump(data, open(args.pickle, "wb"))
 
 if __name__ == "__main__":
