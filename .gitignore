@@ -183,6 +183,7 @@ pyrightconfig.json
 
 # Ignore text files
 *.txt
+!requirements.txt
 
 # vscode
 .vscode/*
@@ -200,3 +201,7 @@ pyrightconfig.json
 
 # json
 *.json
+
+# yaml
+*.yaml
+*.yml
