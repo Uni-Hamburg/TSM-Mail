@@ -3,13 +3,11 @@ Contains the Node class which holds all relevant information for a TSM node.
 """
 
 from typing import Dict
-from dataclasses import dataclass
 
 from parsing.client_backup_result import ClientBackupResult
 from parsing.constants import NODE_DECOMM_STATE_YES
-from parsing.schedule_status import ScheduleStatus
+from parsing.schedule_status import ScheduleStatus, ScheduleStatusEnum
 
-@dataclass
 class Node:
     """
     Node class represents all data collected from TSM regarding nodes, such as
@@ -53,3 +51,29 @@ class Node:
 
         self.contact = contact
         self.schedules = schedules
+
+    def has_client_schedules(self) -> bool:
+        """
+        Checks if node has any attempted / completed schedules.
+        """
+        if any(sched_stat.status != ScheduleStatusEnum.UNKNOWN \
+           for sched_stat in self.schedules):
+            return True
+        return False
+
+    def has_non_successful_schedules(self) -> bool:
+        """
+        Checks if node has any non successful schedules.
+        """
+        if any(sched_stat.status != ScheduleStatusEnum.SUCCESSFUL \
+           for sched_stat in self.schedules):
+            return True
+        return False
+
+    def has_vm_backups(self) -> bool:
+        """
+        Checks if node has any VMWare backup results.
+        """
+        if len(self.vm_results) > 0:
+            return True
+        return False

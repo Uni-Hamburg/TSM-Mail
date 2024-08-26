@@ -99,7 +99,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     today_str = today.strftime("%Y-%m-%d %H:%M:%S")
     yesterday_str = yesterday.strftime("%Y-%m-%d %H:%M:%S")
 
-    logger.info("Collecting VM schedules on %s...", config.inst)
+    logger.info("Collecting VMWare schedules on %s...", config.inst)
 
     vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, " \
                                        "successful, activity, activity_type, bytes, entity " \
@@ -110,7 +110,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     vm_results_str = vm_results_r.decode("utf-8", "replace")
     vm_results_list = vm_results_str.splitlines()
 
-    logger.info("Collected VM schedule data for %d VMs.", len(vm_results_list))
+    logger.info("Collected VMWare schedule data for %d VMs.", len(vm_results_list))
 
     return vm_results_list
 

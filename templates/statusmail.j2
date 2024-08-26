@@ -197,7 +197,7 @@
 </style>
 
 <body>
-    {%- if pd.has_non_successful_schedules -%}
+    {%- if pd.has_non_successful_schedules() -%}
     <h3>Client schedules which have not completed</h3>
 
     <table class="table_main" align="center">
@@ -353,7 +353,7 @@
         </tr>
     </table>
 
-    {% if pd.has_vm_backups %}
+    {% if pd.has_vm_backups() %}
     <h3>Summary of VM backups for the last 24 hours</h3>
 
     <table class="table_vm" align="center">

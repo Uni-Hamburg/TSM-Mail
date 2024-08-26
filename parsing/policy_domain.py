@@ -3,13 +3,11 @@ Contains PolicyDomain class which contains all relevant information to a TSM pol
 """
 
 from typing import List
-from dataclasses import dataclass
 
 from parsing.node import Node
 from parsing.client_backup_result import ClientBackupResult
 from parsing.vmresult import VMResult
 
-@dataclass
 class PolicyDomain:
     """
     PolicyDomain class contains all associated nodes and a flag
@@ -21,13 +19,6 @@ class PolicyDomain:
         contact:    Contact mail for PolicyDomain
     """
     def __init__(self, nodes: List[Node] = None, name: str = "", contact: str = ""):
-        # Flag to determine if said policy domain has any failed schedules
-        self.has_non_successful_schedules = False
-
-        # Flags to determine if policy domain has backups of each type
-        self.has_vm_backups = False
-        self.has_client_backups = False
-
         self.contact = contact
         self.name = name
         self.client_backup_summary = ClientBackupResult()
@@ -37,3 +28,22 @@ class PolicyDomain:
             self.nodes = nodes
         else:
             self.nodes = []
+
+    def has_client_schedules(self) -> bool:
+        """
+        Checks if any node in this PolicyDomain has any attempted / completed backup
+        schedules.
+        """
+        return any(node.has_client_schedules() for node in self.nodes)
+
+    def has_non_successful_schedules(self) -> bool:
+        """
+        Checks if any node in this PolicyDomain has any non successful backup schedules.
+        """
+        return any(node.has_non_successful_schedules() for node in self.nodes)
+
+    def has_vm_backups(self) -> bool:
+        """
+        Checks if any node has any VMWare backup results.
+        """
+        return any(node.has_vm_backups() for node in self.nodes)

@@ -4,8 +4,6 @@ instance and relevant parsing methods for parsing the data from the server logs.
 """
 from typing import Dict, List
 
-from parsing.helper import check_non_successful_schedules
-
 from parsing.node import Node
 from parsing.constants import LINE_DELIM, COLUMN_NODE_NAME, COLUMN_PLATFORM_NAME, COLUMN_PD_NAME, \
     COLUMN_DECOMM_STATE, COLUMN_DOMAIN_CONTACT, COLUMN_NODE_CONTACT, COLUMN_VM_SCHED_NAME, \
@@ -84,25 +82,21 @@ class TSMData:
         """
         for _, domain in self.domains.items():
             for node in domain.nodes:
-                self.__parse_node_status(domain, node, sched_stat_logs, cl_stat_logs)
+                self.__parse_node_status(node, sched_stat_logs, cl_stat_logs)
 
                 # Add to policy v summary
                 if node.backupresult is not None:
-                    current_processing_time = domain.client_backup_summary.processing_time
-
                     domain.client_backup_summary += node.backupresult
 
                     # Find maximum processing time for processing time summary cell
-                    if current_processing_time < \
-                        node.backupresult.processing_time:
-                        current_processing_time = node.backupresult.processing_time
-
-                    domain.client_backup_summary.processing_time = current_processing_time
+                    domain.client_backup_summary.processing_time = \
+                        max(domain.client_backup_summary.processing_time,
+                            node.backupresult.processing_time)
 
             # Sort nodes by failed objects
             domain.nodes.sort(key=lambda x: x.backupresult.failed, reverse=True)
 
-    def __parse_node_status(self, policy_domain: PolicyDomain, node: Node,
+    def __parse_node_status(self, node: Node,
                             sched_stat_logs: Dict[str, List[str]],
                             cl_stat_logs: Dict[str, List[str]]):
         # Parse results into node.
@@ -112,8 +106,6 @@ class TSMData:
             schedules_parser = SchedulesParser()
             node.schedules = schedules_parser.parse(sched_stat_log)
 
-            policy_domain.has_non_successful_schedules = check_non_successful_schedules(policy_domain, node)
-
         if node.name in cl_stat_logs:
             cl_stat_log = cl_stat_logs[node.name]
 
@@ -121,8 +113,6 @@ class TSMData:
                 parsed_cl_res = ClientBackupResult()
                 parsed_cl_res.parse(cl_stat_log)
                 node.backupresult += parsed_cl_res
-
-                policy_domain.has_client_backups = True
 
     def parse_vm_schedules(self, vms_log: List[str]):
         """
@@ -150,11 +140,7 @@ class TSMData:
             # Add VM result to associated node
             if vm_result.entity in self.nodes:
                 self.nodes[vm_result.entity].vm_results.append(vm_result)
-
                 domain = self.domains[self.nodes[vm_result.entity].policy_domain_name]
-
-                # Set the VM backup flag in the policy domain
-                domain.has_vm_backups = True
 
                 # Add VM result to summary
                 domain.vm_backup_summary += vm_result

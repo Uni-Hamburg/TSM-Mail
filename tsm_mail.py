@@ -19,8 +19,6 @@ from datetime import datetime
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from parsing.helper import check_non_successful_schedules
-
 from parsing.tsm_data import TSMData
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
@@ -67,18 +65,6 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDoma
 
             loose_nodes_collection[contacts].client_backup_summary += node.backupresult
 
-            # Check if node has any client backups done
-            if node.backupresult.inspected > 0:
-                loose_nodes_collection[contacts].has_client_backups = True
-
-            # Also check if any node has any VM backups
-            if len(node.vm_results) > 0:
-                loose_nodes_collection[contacts].has_vm_backups = True
-
-            # Check if node has any failed schedules
-            loose_nodes_collection[contacts].has_non_successful_schedules = \
-                check_non_successful_schedules(loose_nodes_collection[contacts], node)
-
     return loose_nodes_collection
 
 def send_mail(config: Dict[str, Any], mailer: StatusMailer,
@@ -88,14 +74,14 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
     """
     Create mail subject and call mailer to send mail.
     """
-    if not policy_domain.has_client_backups and not policy_domain.has_vm_backups:
+    if not policy_domain.has_client_schedules() and not policy_domain.has_vm_backups():
         logger.info("No backups in 24 hours detected for %s.", policy_domain.name)
     else:
         subject_template = Template(config["mail_subject_template"])
 
         logger.info("Parsing mail template for %s.", receiver_addr)
         subject = subject_template.substitute({
-            "status": "OKAY" if not policy_domain.has_non_successful_schedules else "WARN",
+            "status": "OKAY" if not policy_domain.has_non_successful_schedules() else "WARN",
             "tsm_inst": instance,
             "pd_name": policy_domain.name,
             "time": time_string
