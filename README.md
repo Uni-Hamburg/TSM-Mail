@@ -67,7 +67,7 @@ Below an explanation for every config entry.
 
 ### Config template
 
-```
+```yaml
 tsm_user: "MAILER"
 tsm_password_file: "./pwd.txt"
 
@@ -84,7 +84,7 @@ log_path: "./tsm_mail.log"
 log_rotate: true
 
 tsm_instances:
-    - "tsmsrv1"
-    - "tsmsrv2"
-    - "tsmsrv3"
+  - "tsmsrv1"
+  - "tsmsrv2"
+  - "tsmsrv3"
 ```
