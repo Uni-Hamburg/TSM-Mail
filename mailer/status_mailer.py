@@ -50,12 +50,12 @@ class StatusMailer:
         message["From"] = sender_addr
         message["To"] = receiver_addr
 
-        if replyto_addr != "":
+        if replyto_addr:
             message["Reply-to"] = replyto_addr
         else:
             logger.info("No Reply-to configured. Skipping.")
 
-        if bcc_addr != "":
+        if bcc_addr:
             message["Bcc"] = bcc_addr
         else:
             logger.info("No Bcc configured. Skipping.")

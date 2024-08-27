@@ -45,7 +45,7 @@ class VMResult:
         self.backed_up_bytes_unit = "GB"
         self.entity = entity
 
-        if start_time != "":
+        if start_time:
             self.elapsed_time = self.__calculate_elapsed_time()
         else:
             self.elapsed_time = timedelta()

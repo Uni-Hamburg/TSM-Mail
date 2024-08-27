@@ -51,7 +51,7 @@ class TSMData:
             node_contact_field = line_split[COLUMN_NODE_CONTACT].strip()
 
             # Create node with platform and email contact, if node has specific contact
-            if node_contact_field != "" and domain_description_field == "":
+            if node_contact_field and not domain_description_field:
                 # Remove string delimiters when multiple mail contacts are supplied
                 if node_contact_field.startswith('"'):
                     node_contact_field = node_contact_field[1:len(node_contact_field - 1)]
@@ -69,7 +69,7 @@ class TSMData:
             # Update policy domain
             self.domains[policy_domain_name].nodes.append(self.nodes[node_name])
 
-            if domain_description_field != "":
+            if domain_description_field:
                 self.domains[policy_domain_name].contact = domain_description_field
 
     def parse_schedules_and_backup_results(self, sched_stat_logs: List[str],

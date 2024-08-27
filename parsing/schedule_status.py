@@ -146,7 +146,7 @@ class SchedulesParser:
 
             # Check if schedule exists in dict and add schedule line to history
             if sched_stat.schedule_name in scheds:
-                if sched_stat.start_time != '':
+                if sched_stat.start_time:
                     sched_start_date = datetime.strptime(sched_stat.start_time, '%Y-%m-%d %H:%M:%S')
                     current_date = datetime.now()
 

@@ -56,7 +56,7 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDoma
     loose_nodes_collection: Dict[str, PolicyDomain] = {}
 
     for node in nodes:
-        if node.contact != "":
+        if node.contact:
             contacts = parse_contacts(node.contact)
             if contacts not in loose_nodes_collection:
                 loose_nodes_collection[contacts] = PolicyDomain([node], pd_name)
@@ -102,9 +102,9 @@ def send_mail_reports(config: Dict[str, Any],
     time_string = current_time.strftime("%d.%m.%Y %H:%M:%S")
 
     bcc = config["mail_bcc_addr"] if "mail_bcc_addr" in config \
-        and config["mail_bcc_addr"] != "" else ""
+        and config["mail_bcc_addr"] else ""
     reply_to = config["mail_replyto_addr"] if "mail_replyto_addr" in config \
-        and config["mail_replyto_addr"] != "" else ""
+        and config["mail_replyto_addr"] else ""
 
     logger.info("Preparing mail reports...")
     for inst in config["tsm_instances"]:
@@ -116,7 +116,7 @@ def send_mail_reports(config: Dict[str, Any],
         loose_nodes: Dict[str, PolicyDomain] = {}
 
         for policy_domain in data[inst].domains.values():
-            if policy_domain.contact != "":
+            if policy_domain.contact:
                 contacts = parse_contacts(policy_domain.contact)
                 send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                           contacts, reply_to, bcc, inst, time_string)
@@ -137,7 +137,7 @@ def get_password(config: Dict[str, Any]) -> str:
     Try to read the password file, otherwise read it directly
     from user input using getpass.
     """
-    if config["tsm_password_file"] != "":
+    if config["tsm_password_file"]:
         if os.path.isfile(config["tsm_password_file"]):
             with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
                 pwd = pwd_file.read()

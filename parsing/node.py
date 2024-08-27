@@ -50,14 +50,21 @@ class Node:
             self.vm_results = []
 
         self.contact = contact
-        self.schedules = schedules
+
+        if schedules:
+            self.schedules = schedules
+        else:
+            self.schedules = {}
 
     def has_client_schedules(self) -> bool:
         """
         Checks if node has any attempted / completed schedules.
         """
+        if not self.schedules:
+            return False
+
         if any(sched_stat.status != ScheduleStatusEnum.UNKNOWN \
-           for sched_stat in self.schedules):
+           for sched_stat in self.schedules.values()):
             return True
         return False
 
@@ -65,8 +72,11 @@ class Node:
         """
         Checks if node has any non successful schedules.
         """
+        if not self.schedules:
+            return False
+
         if any(sched_stat.status != ScheduleStatusEnum.SUCCESSFUL \
-           for sched_stat in self.schedules):
+           for sched_stat in self.schedules.values()):
             return True
         return False
 
