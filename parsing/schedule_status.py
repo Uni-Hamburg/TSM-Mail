@@ -153,6 +153,8 @@ class SchedulesParser:
                     # Calculate position in 15 day history list
                     date_diff = current_date - sched_start_date
 
+                    # Check if date_diff is within 15 days of current_date.
+                    # History is set to be maximum 15 days.
                     if date_diff.days <= 15 and date_diff.days > 0:
                         scheds[sched_stat.schedule_name].history[
                             (HISTORY_MAX_ITEMS - 1) - date_diff.days] = sched_stat.status
