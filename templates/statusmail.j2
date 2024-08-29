@@ -311,20 +311,20 @@
         {%- endif -%}
             <td>{{ item.name }}</td>
             <td>{{ item.platform }}</td>
-            <td class="align_right">{{ item.backupresult.inspected_str }}</td>
-            <td class="align_right">{{ item.backupresult.backed_up_str }}</td>
-            <td class="align_right">{{ item.backupresult.updated_str }}</td>
-            <td class="align_right">{{ item.backupresult.expired_str }}</td>
+            <td class="align_right">{{ item.backupresult.inspected_str() }}</td>
+            <td class="align_right">{{ item.backupresult.backed_up_str() }}</td>
+            <td class="align_right">{{ item.backupresult.updated_str() }}</td>
+            <td class="align_right">{{ item.backupresult.expired_str() }}</td>
             {% if item.backupresult.failed > 0 %}
-            <td class="objects_failed_cell">{{ item.backupresult.failed_str }}</td>
+            <td class="objects_failed_cell">{{ item.backupresult.failed_str() }}</td>
             {% else %}
-            <td class="align_right">{{ item.backupresult.failed_str }}</td>
+            <td class="align_right">{{ item.backupresult.failed_str() }}</td>
             {% endif %}
-            <td class="align_right">{{ item.backupresult.retries_str }}</td>
-            <td class="align_right">{{ item.backupresult.bytes_inspected_str }}</td>
-            <td class="align_right">{{ item.backupresult.bytes_transferred_str }}</td>
-            <td class="align_right">{{ item.backupresult.aggregate_data_rate_str }}</td>
-            <td class="align_right">{{ item.backupresult.processing_time_str }}</td>
+            <td class="align_right">{{ item.backupresult.retries_str() }}</td>
+            <td class="align_right">{{ item.backupresult.bytes_inspected_str() }}</td>
+            <td class="align_right">{{ item.backupresult.bytes_transferred_str() }}</td>
+            <td class="align_right">{{ item.backupresult.aggregate_data_rate_str() }}</td>
+            <td class="align_right">{{ item.backupresult.processing_time_str() }}</td>
         </tr>
         {%- endif -%}
         {%- endfor -%}
@@ -336,20 +336,20 @@
         {%- endif -%}
             <td class="bold_text">Summary</td>
             <td> </td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.inspected_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.backed_up_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.updated_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.expired_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.inspected_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.backed_up_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.updated_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.expired_str() }}</td>
             {% if pd.client_backup_summary.failed > 0 %}
-            <td class="objects_failed_cell_summary ">{{ pd.client_backup_summary.failed_str }}</td>
+            <td class="objects_failed_cell_summary ">{{ pd.client_backup_summary.failed_str() }}</td>
             {% else %}
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.failed_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.failed_str() }}</td>
             {% endif %}
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.retries_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_inspected_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_transferred_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.aggregate_data_rate_str }}</td>
-            <td class="align_right_bold_text">{{ pd.client_backup_summary.processing_time_str }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.retries_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_inspected_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.bytes_transferred_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.aggregate_data_rate_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.client_backup_summary.processing_time_str() }}</td>
         </tr>
     </table>
 
@@ -381,8 +381,8 @@
             <td>{{ item.vm_name }}</td>
             <td class="align_right">{{ item.start_time }}</td>
             <td class="align_right">{{ item.end_time }}</td>
-            <td class="align_right">{{ item.elapsed_time_str }}</td>
-            <td class="align_right">{{ item.backed_up_bytes_str }}</td>
+            <td class="align_right">{{ item.elapsed_time_str() }}</td>
+            <td class="align_right">{{ item.backed_up_bytes_str() }}</td>
             {% if item.successful %}
             <td class="vm_successful">YES</td>
             {% else %}
@@ -403,8 +403,8 @@
             <td class="align_right_bold_text"></td>
             <td class="align_right_bold_text"></td>
             <td class="align_right_bold_text"></td>
-            <td class="align_right_bold_text">{{ pd.vm_backup_summary.elapsed_time_str }}</td>
-            <td class="align_right_bold_text">{{ pd.vm_backup_summary.backed_up_bytes_str }}</td>
+            <td class="align_right_bold_text">{{ pd.vm_backup_summary.elapsed_time_str() }}</td>
+            <td class="align_right_bold_text">{{ pd.vm_backup_summary.backed_up_bytes_str() }}</td>
             <td class="align_right_bold_text"></td>
             <td class="align_right_bold_text"></td>
             <td class="align_right_bold_text"></td>

@@ -22,37 +22,22 @@ class ClientBackupResult:
     """
     def __init__(self):
         self.inspected = 0
-        self.inspected_str = "0"
-
         self.backed_up = 0
-        self.backed_up_str = "0"
-
         self.updated = 0
-        self.updated_str = "0"
-
         self.expired = 0
-        self.expired_str = "0"
-
         self.failed = 0
-        self.failed_str = "0"
-
         self.retries = 0
-        self.retries_str = "0"
 
         self.bytes_inspected = 0
-        self.bytes_inspected_str = "0"
         self.bytes_inspected_unit = "GB" # TODO: Find better solution to the unit issue
 
         self.bytes_transferred = 0
-        self.bytes_transferred_str = "0"
         self.bytes_transferred_unit = "GB"
 
         self.aggregate_data_rate = 0
-        self.aggregate_data_rate_str = "0,00"
         self.aggregate_data_rate_unit = "MB"
 
         self.processing_time = 0
-        self.processing_time_str = "00:00:00"
 
         self.node_name = ""
 
@@ -191,25 +176,69 @@ class ClientBackupResult:
             if PROCESSING_TIME_STR in item:
                 self.processing_time = self.__parse_line(item, PROCESSING_TIME_STR)
 
-        self.update_str_representation()
+    def inspected_str(self):
+        """
+        Returns a formatted string for "inspected".
+        """
+        return self.__format_num_str(self.inspected, precision=0)
 
-    def update_str_representation(self):
+    def backed_up_str(self):
         """
-        Update string representation of numeric backup result values.
+        Returns a formatted string for "backed_up".
         """
-        self.inspected_str = self.__format_num_str(self.inspected, precision=0)
-        self.backed_up_str = self.__format_num_str(self.backed_up, precision=0)
-        self.updated_str = self.__format_num_str(self.updated, precision=0)
-        self.expired_str = self.__format_num_str(self.expired, precision=0)
-        self.failed_str = self.__format_num_str(self.failed, precision=0)
-        self.retries_str = self.__format_num_str(self.retries, precision=0)
-        self.bytes_inspected_str = self.__parse_size_string(
+        return self.__format_num_str(self.backed_up, precision=0)
+
+    def updated_str(self):
+        """
+        Returns a formatted string for "updated".
+        """
+        return self.__format_num_str(self.updated, precision=0)
+
+    def expired_str(self):
+        """
+        Returns a formatted string for "expired".
+        """
+        return self.__format_num_str(self.expired, precision=0)
+
+    def failed_str(self):
+        """
+        Returns a formatted string for "failed".
+        """
+        return self.__format_num_str(self.failed, precision=0)
+
+    def retries_str(self):
+        """
+        Returns a formatted string for "retries".
+        """
+        return self.__format_num_str(self.retries, precision=0)
+
+    def bytes_inspected_str(self):
+        """
+        Returns a formatted string for "bytes_inspected".
+        """
+        return self.__parse_size_string(
             self.bytes_inspected, self.bytes_inspected_unit, remove_suffix=True)
-        self.bytes_transferred_str = self.__parse_size_string(
+
+    def bytes_transferred_str(self):
+        """
+        Returns a formatted string for "bytes_transferred".
+        """
+        return self.__parse_size_string(
             self.bytes_transferred, self.bytes_transferred_unit, remove_suffix=True)
-        self.aggregate_data_rate_str = self.__parse_size_string(
-            self.aggregate_data_rate, self.aggregate_data_rate_unit, remove_suffix=True, data_rate=True)
-        self.processing_time_str = self.__format_elapsed_time(int(self.processing_time))
+
+    def aggregate_data_rate_str(self):
+        """
+        Returns a formatted string for "aggregate_data_rate".
+        """
+        return self.__parse_size_string(
+            self.aggregate_data_rate, self.aggregate_data_rate_unit,
+            remove_suffix=True, data_rate=True)
+
+    def processing_time_str(self):
+        """
+        Returns a formatted string for "processing_time".
+        """
+        return self.__format_elapsed_time(int(self.processing_time))
 
     def __add__(self, other: 'ClientBackupResult') -> 'ClientBackupResult':
         cl_res = ClientBackupResult()
@@ -224,8 +253,6 @@ class ClientBackupResult:
         cl_res.bytes_transferred = self.bytes_transferred + other.bytes_transferred
         cl_res.aggregate_data_rate = self.aggregate_data_rate + other.aggregate_data_rate
         cl_res.processing_time = self.processing_time + other.processing_time
-
-        cl_res.update_str_representation()
 
         return cl_res
 

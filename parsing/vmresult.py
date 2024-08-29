@@ -50,8 +50,6 @@ class VMResult:
         else:
             self.elapsed_time = timedelta()
 
-        self.update_str_representation()
-
     def __convert_notation(self, num_string: str) -> str:
         # Convert from US notation to EU notation.
         return num_string.replace('.', 'x').replace(',', '.').replace('x', ',')
@@ -70,19 +68,22 @@ class VMResult:
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-    def update_str_representation(self):
+    def backed_up_bytes_str(self) -> str:
         """
-        Update string representation of numeric backup result values.
+        Returns a formatted string for "backed_up_bytes".
         """
-        self.backed_up_bytes_str = self.__format_backed_up_bytes()
-        self.elapsed_time_str = self.__format_elapsed_time()
+        return self.__format_backed_up_bytes()
+
+    def elapsed_time_str(self):
+        """
+        Returns a formatted string for "elapsed_time".
+        """
+        return self.__format_elapsed_time()
 
     def __add__(self, other: 'VMResult') -> 'VMResult':
         res = VMResult()
 
         res.backed_up_bytes = self.backed_up_bytes + other.backed_up_bytes
         res.elapsed_time = self.elapsed_time + other.elapsed_time
-
-        res.update_str_representation()
 
         return res
