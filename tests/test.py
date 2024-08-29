@@ -159,7 +159,7 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(len(data.domains), 3)
         self.assertEqual(len(data.nodes), 9)
 
-        self.assertTrue(all(node.schedules for node in data.nodes.values()))
+        self.assertTrue(all(node.has_client_schedules() for node in data.nodes.values()))
 
     def test_jinja_parsing(self):
         """

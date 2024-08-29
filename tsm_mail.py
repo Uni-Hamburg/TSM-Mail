@@ -25,7 +25,7 @@ from parsing.constants import LOG_LEVEL_DEBUG_STR, LOG_LEVEL_ERROR_STR, LOG_LEVE
     LOG_LEVEL_WARN_STR
 from parsing.report_template import ReportTemplate
 
-from collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
+from collector.collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
     collect_client_backup_results, collect_schedule_logs
 
 from mailer.status_mailer import StatusMailer

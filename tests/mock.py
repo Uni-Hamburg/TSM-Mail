@@ -106,15 +106,16 @@ def mock_schedule_logs(policy_domain_name: str='DOMAIN',
     # Add all possible schedule status to the schedule logs to test
     # history parsing with all schedule status.
     i = 1
-    for status, _ in status_messages.items():
+    for status, message in status_messages.items():
         start_time = format_time(-i)
         end_time = '1970-01-01 00:00:00'
 
         log_entry = f'{policy_domain_name},' \
                     f'{schedule_name},{node_name},{start_time},,' \
                     f'{end_time},{status_to_string[status]},{0},' \
-                    f'{status_messages[status]}'
+                    f'{message}'
 
+        # Add log entries before the current and future schedules
         logs[HISTORY_MAX_ITEMS - (2 + i)] = log_entry
         i = i + 1
 
