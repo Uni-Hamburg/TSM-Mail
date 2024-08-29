@@ -17,14 +17,13 @@ from typing import Dict, List, Any
 from datetime import datetime
 
 import yaml
-from jinja2 import Environment, FileSystemLoader
 
 from parsing.tsm_data import TSMData
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
-from parsing.schedule_status import ScheduleStatusEnum
 from parsing.constants import LOG_LEVEL_DEBUG_STR, LOG_LEVEL_ERROR_STR, LOG_LEVEL_INFO_STR, \
     LOG_LEVEL_WARN_STR
+from parsing.report_template import ReportTemplate
 
 from collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
     collect_client_backup_results, collect_schedule_logs
@@ -157,13 +156,13 @@ def load_config(path: str) -> Dict[str, Any]:
     if os.path.isfile(path):
         with open(path, "r", encoding="utf-8") as cfg_file:
             try:
-                print(f"Loaded config from {path}")
+                sys.stdout.write(f"Loaded config from {path}\n")
                 return yaml.safe_load(cfg_file)
             except yaml.YAMLError as exc:
-                print(exc)
+                sys.stderr.write(f'{exc}\n')
                 sys.exit(1)
     else:
-        print(f"ERROR: {path} not found.")
+        sys.stderr.write(f"ERROR: {path} not found.\n")
         sys.exit(1)
 
 def setup_logger(config: Dict[str, Any]):
@@ -187,7 +186,7 @@ def setup_logger(config: Dict[str, Any]):
             raise ValueError(f'ERROR: log_level "{config["log_level"]}" \
                               not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
     else:
-        print("WARNING: log_level argument not supplied in config, defaulting to ERROR.")
+        sys.stdout.write("WARNING: log_level argument not supplied in config, defaulting to ERROR.\n")
         log_level = logging.ERROR
 
     logger.setLevel(log_level)
@@ -218,11 +217,7 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
     """
     Render and export all reports to HTML files which have been parsed from the TSM data. 
     """
-    template_file_loader = FileSystemLoader(os.path.dirname(config["mail_template_path"]))
-    template_env = Environment(loader=template_file_loader, extensions=['jinja2.ext.do'])
-
-    template = template_env.get_template(os.path.basename(config["mail_template_path"]))
-    template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
+    template = ReportTemplate(config["mail_template_path"])
 
     for inst in config["tsm_instances"]:
         if inst not in data:
@@ -230,7 +225,7 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
             break
 
         for policy_domain in data[inst].domains.values():
-            html_test_render = template.render(pd=policy_domain)
+            html_test_render = template.render(policy_domain)
 
             with open(f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8") as file:
                 file.write(html_test_render)

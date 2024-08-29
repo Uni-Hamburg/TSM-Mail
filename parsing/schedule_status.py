@@ -60,7 +60,7 @@ class ScheduleStatus:
 
         # Initialize history with "UNKNOWN" status
         self.history: List[ScheduleStatusEnum] = \
-            [ScheduleStatusEnum.UNKNOWN for i in range(HISTORY_MAX_ITEMS)]
+            [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
 
 class SchedulesParser:
     """
@@ -157,6 +157,6 @@ class SchedulesParser:
                     # History is set to be maximum 15 days.
                     if date_diff.days <= 15 and date_diff.days > 0:
                         scheds[sched_stat.schedule_name].history[
-                            (HISTORY_MAX_ITEMS - 1) - date_diff.days] = sched_stat.status
+                            HISTORY_MAX_ITEMS - date_diff.days] = sched_stat.status
 
         return self.__remove_old_schedules(scheds)

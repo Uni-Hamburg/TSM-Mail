@@ -72,8 +72,8 @@ class TSMData:
             if domain_description_field:
                 self.domains[policy_domain_name].contact = domain_description_field
 
-    def parse_schedules_and_backup_results(self, sched_stat_logs: List[str],
-                                           cl_stat_logs: List[str]):
+    def parse_schedules_and_backup_results(self, sched_stat_logs: Dict[str, List[str]],
+                                           cl_stat_logs: Dict[str, List[str]]):
         """
         Parse client schedules and backup results.
         Insert parsed results into respective node and policy domain.
