@@ -4,14 +4,16 @@ Contains several functions to mock data from the TSM environment.
 
 from typing import List, Dict
 from datetime import datetime, timedelta
+from functools import reduce
 
 from parsing.node import Node
+from parsing.policy_domain import PolicyDomain
 from parsing.client_backup_result import ClientBackupResult
 from parsing.schedule_status import ScheduleStatus, ScheduleStatusEnum
 from parsing.constants import NODE_DECOMM_STATE_NO, HISTORY_MAX_ITEMS, STATUS_COMPLETED_STR, \
     STATUS_FAILED_NO_RESTART_STR, STATUS_FAILED_STR, STATUS_FUTURE_STR, STATUS_IN_PROGRESS_STR, \
     STATUS_MISSED_STR, STATUS_PENDING_STR, STATUS_RESTARTED_STR, STATUS_SEVERED_STR, \
-    STATUS_STARTED_STR
+    STATUS_STARTED_STR, SCHED_ACT_START_TIME_DEFAULT
 
 def format_time(offset_days = 0) -> str:
     """
@@ -182,20 +184,20 @@ def mock_schedule(schedule_name: str='SCHEDULE',
         schedule_history_top = HISTORY_MAX_ITEMS - 1
 
         # Add all schedules to schedule history to test HTML parsing of schedule history.
-        i = HISTORY_MAX_ITEMS - 2 # Start from the schedule_top, offset by one
+        i = schedule_history_top # Start from the schedule_top, offset by one
         for status in ScheduleStatusEnum:
             history[i] = status
             i = i - 1
-
-        # Set most recent scehdule to provided schedule_status
-        history[schedule_history_top] = schedule_status
 
         return history
 
     return_status = ScheduleStatus(
         schedule_status,
         schedule_name,
-        start_time=format_time()
+        start_time=format_time(),
+        actual_start_time=SCHED_ACT_START_TIME_DEFAULT,
+        end_time='1970-01-01 00:00:00',
+        return_code='0'
     )
 
     return_status.history = generate_history(schedule_status)
@@ -205,7 +207,7 @@ def mock_backup_result(node_name: str='NODE') -> ClientBackupResult:
     """
     Generates a random client backup result.
     """
-    cl_backup_result = ClientBackupResult()
+    cl_backup_result = ClientBackupResult(node_name)
     cl_backup_result.parse(mock_backup_result_log(node_name))
     return cl_backup_result
 
@@ -217,3 +219,14 @@ def mock_node_with_schedules(node_name: str='NODE', platform_name: str='Unknown 
     return Node(node_name, platform_name, domain_name, NODE_DECOMM_STATE_NO,
                 backupresult=mock_backup_result(node_name),
                 schedules=mock_schedules(schedules) if schedules else {})
+
+def mock_policy_domain(domain_name: str, domain_contact: str, nodes: List[Node]) -> PolicyDomain:
+    """
+    Creates a mocked policy domain. 
+    """
+    policy_domain = PolicyDomain(nodes, domain_name, domain_contact)
+    # policy_domain.client_backup_summary = sum([node.backupresult for node in policy_domain.nodes])
+
+    backupresults = [node.backupresult for node in policy_domain.nodes]
+    policy_domain.client_backup_summary += reduce(lambda s1, s2: s1 + s2, backupresults)
+    return policy_domain

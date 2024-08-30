@@ -37,7 +37,7 @@ class Node:
         if backupresult is not None:
             self.backupresult = backupresult
         else:
-            self.backupresult = ClientBackupResult()
+            self.backupresult = ClientBackupResult(name)
 
         if decomm_state.strip() == NODE_DECOMM_STATE_YES:
             self.decomm_state = True
@@ -87,3 +87,13 @@ class Node:
         if len(self.vm_results) > 0:
             return True
         return False
+
+    def __eq__(self, other: 'Node') -> bool:
+        return self.name == other.name and \
+               self.policy_domain_name == other.policy_domain_name and \
+               self.platform == other.platform and \
+               self.backupresult == other.backupresult and \
+               self.decomm_state == other.decomm_state and \
+               self.vm_results == other.vm_results and \
+               self.contact == other.contact and \
+               self.schedules == other.schedules

@@ -20,7 +20,7 @@ class ClientBackupResult:
     ClientBackupResult parses backup results from activity log and holds
     the parsed data.
     """
-    def __init__(self):
+    def __init__(self, node_name: str=""):
         self.inspected = 0
         self.backed_up = 0
         self.updated = 0
@@ -29,7 +29,7 @@ class ClientBackupResult:
         self.retries = 0
 
         self.bytes_inspected = 0
-        self.bytes_inspected_unit = "GB" # TODO: Find better solution to the unit issue
+        self.bytes_inspected_unit = "GB"
 
         self.bytes_transferred = 0
         self.bytes_transferred_unit = "GB"
@@ -39,7 +39,7 @@ class ClientBackupResult:
 
         self.processing_time = 0
 
-        self.node_name = ""
+        self.node_name = node_name
 
     def __parse_size(self, size: str) -> float:
         # Parse memory sizes to bytes as int
@@ -148,7 +148,7 @@ class ClientBackupResult:
             return
 
         # Get node name from first log entry
-        self.node_name = client_log[0].split(LINE_DELIM)[COLUMN_NODE_NAME]
+        # self.node_name = client_log[0].split(LINE_DELIM)[COLUMN_NODE_NAME]
 
         for item in client_log:
             # TODO: Implement TDP MSSQL parsing for client results.
@@ -241,7 +241,7 @@ class ClientBackupResult:
         return self.__format_elapsed_time(int(self.processing_time))
 
     def __add__(self, other: 'ClientBackupResult') -> 'ClientBackupResult':
-        cl_res = ClientBackupResult()
+        cl_res = ClientBackupResult(self.node_name)
 
         cl_res.inspected = self.inspected + other.inspected
         cl_res.backed_up = self.backed_up + other.backed_up
@@ -271,3 +271,19 @@ class ClientBackupResult:
         ])
 
         return f"Data of node: {self.node_name}\n{table}"
+
+    def __eq__(self, other: 'ClientBackupResult') -> bool:
+        return self.inspected == other.inspected and \
+               self.backed_up == other.backed_up and \
+               self.updated == other.updated and \
+               self.expired == other.expired and \
+               self.failed == other.failed and \
+               self.retries == other.retries and \
+               self.bytes_inspected == other.bytes_inspected and \
+               self.bytes_inspected_unit == other.bytes_inspected_unit and \
+               self.bytes_transferred == other.bytes_transferred and \
+               self.bytes_transferred_unit == other.bytes_transferred_unit and \
+               self.aggregate_data_rate == other.aggregate_data_rate and \
+               self.aggregate_data_rate_unit == other.aggregate_data_rate_unit and \
+               self.processing_time == other.processing_time and \
+               self.node_name == other.node_name

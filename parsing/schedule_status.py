@@ -62,6 +62,14 @@ class ScheduleStatus:
         self.history: List[ScheduleStatusEnum] = \
             [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
 
+    def __eq__(self, other: 'ScheduleStatus') -> bool:
+        return self.status == other.status and \
+               self.schedule_name == other.schedule_name and \
+               self.return_code == other.return_code and \
+               self.start_time == other.start_time and \
+               self.actual_start_time == other.actual_start_time and \
+               self.end_time == other.end_time
+
 class SchedulesParser:
     """
     SchedulesParser parses and collects schedule data from all schedules provided in logs.

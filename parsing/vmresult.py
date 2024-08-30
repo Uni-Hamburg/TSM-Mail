@@ -87,3 +87,16 @@ class VMResult:
         res.elapsed_time = self.elapsed_time + other.elapsed_time
 
         return res
+
+    def __eq__(self, other: 'VMResult') -> bool:
+        return self.schedule_name == other.schedule_name and \
+               self.vm_name == other.vm_name and \
+               self.start_time == other.start_time and \
+               self.end_time == other.end_time and \
+               self.successful == other.successful and \
+               self.activity == other.activity and \
+               self.activity_type == other.activity_type and \
+               self.backed_up_bytes == other.backed_up_bytes and \
+               self.backed_up_bytes_unit == other.backed_up_bytes_unit and \
+               self.entity == other.entity and \
+               self.elapsed_time == other.elapsed_time

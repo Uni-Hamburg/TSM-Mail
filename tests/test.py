@@ -17,7 +17,8 @@ from parsing.report_template import ReportTemplate
 
 from tests.mock import mock_schedule_logs_successful, mock_schedule_logs_edge_cases, \
     mock_schedule_logs_failed, get_schedule_logs_missed, mock_node_log, \
-    mock_backup_result_log, mock_schedule_logs
+    mock_backup_result_log, mock_backup_result, mock_schedule_logs, mock_schedules, \
+    mock_policy_domain
 
 class TestParsing(unittest.TestCase):
     """
@@ -89,8 +90,14 @@ class TestParsing(unittest.TestCase):
         Tests parsing of nodes and backup results from a server log.
         """
         domain_a_name = 'TEST_DOMAIN_A'
+        domain_a_contact = 'backup@company-a.de'
+
         domain_z_name = 'TEST_DOMAIN_Z'
+        domain_z_contact = 'it.center@company-b.com'
+
         domain_loose_name = 'TEST_DOMAIN_LOOSE'
+        node_loose_a_contact = 'mr.a@acomp.com'
+        node_loose_b_contact = 'mr.b@bcomp.com'
 
         node_a_name = 'NODE_A'
         node_b_name = 'NODE_B'
@@ -110,18 +117,32 @@ class TestParsing(unittest.TestCase):
 
         nodes_log = [
             # TEST_DOMAIN_A
-            mock_node_log(node_a_name, 'Linux x86-64', domain_a_name, policy_domain_contact='backup@company-a.de'),
-            mock_node_log(node_b_name, 'Linux x86-64', domain_a_name, policy_domain_contact='backup@company-a.de'),
-            mock_node_log(node_c_name, 'Linux x86-64', domain_a_name, policy_domain_contact='backup@company-a.de'),
-            mock_node_log(node_d_name, 'Linux x86-64', domain_a_name, policy_domain_contact='backup@company-a.de'),
+            mock_node_log(node_a_name, 'Linux x86-64', domain_a_name, policy_domain_contact=domain_a_contact),
+            mock_node_log(node_b_name, 'Linux x86-64', domain_a_name, policy_domain_contact=domain_a_contact),
+            mock_node_log(node_c_name, 'Linux x86-64', domain_a_name, policy_domain_contact=domain_a_contact),
+            mock_node_log(node_d_name, 'Linux x86-64', domain_a_name, policy_domain_contact=domain_a_contact),
             # TEST_DOMAIN_Z
-            mock_node_log(node_x_name, 'WinNT', domain_z_name, policy_domain_contact='it.center@company-b.com'),
-            mock_node_log(node_y_name, 'WinNT', domain_z_name, policy_domain_contact='it.center@company-b.com'),
-            mock_node_log(node_z_name, 'WinNT', domain_z_name, policy_domain_contact='it.center@company-b.com'),
+            mock_node_log(node_x_name, 'WinNT', domain_z_name, policy_domain_contact=domain_z_contact),
+            mock_node_log(node_y_name, 'WinNT', domain_z_name, policy_domain_contact=domain_z_contact),
+            mock_node_log(node_z_name, 'WinNT', domain_z_name, policy_domain_contact=domain_z_contact),
             # Loose nodes without specific domain (have a contact set for each node)
-            mock_node_log(node_loose_a_name, 'Linux x86-64', domain_loose_name, node_contact='mr.a@acomp.com'),
-            mock_node_log(node_loose_b_name, 'Linux x86-64', domain_loose_name, node_contact='mr.b@bcomp.com'),
+            mock_node_log(node_loose_a_name, 'Linux x86-64', domain_loose_name, node_contact=node_loose_a_contact),
+            mock_node_log(node_loose_b_name, 'Linux x86-64', domain_loose_name, node_contact=node_loose_b_contact),
         ]
+
+        nodes_expected = {
+            node_a_name: Node(node_a_name, 'Linux x86-64', domain_a_name, NODE_DECOMM_STATE_NO),
+            node_b_name: Node(node_b_name, 'Linux x86-64', domain_a_name, NODE_DECOMM_STATE_NO),
+            node_c_name: Node(node_c_name, 'Linux x86-64', domain_a_name, NODE_DECOMM_STATE_NO),
+            node_d_name: Node(node_d_name, 'Linux x86-64', domain_a_name, NODE_DECOMM_STATE_NO),
+            node_x_name: Node(node_x_name, 'WinNT', domain_z_name, NODE_DECOMM_STATE_NO),
+            node_y_name: Node(node_y_name, 'WinNT', domain_z_name, NODE_DECOMM_STATE_NO),
+            node_z_name: Node(node_z_name, 'WinNT', domain_z_name, NODE_DECOMM_STATE_NO),
+            node_loose_a_name: Node(node_loose_a_name, 'Linux x86-64', domain_loose_name, NODE_DECOMM_STATE_NO,
+                                    node_loose_a_contact),
+            node_loose_b_name: Node(node_loose_b_name, 'Linux x86-64', domain_loose_name, NODE_DECOMM_STATE_NO,
+                                    node_loose_b_contact)
+        }
 
         client_backup_logs = {
             node_a_name: mock_backup_result_log(node_a_name),
@@ -135,20 +156,112 @@ class TestParsing(unittest.TestCase):
             node_loose_b_name: mock_backup_result_log(node_loose_b_name)
         }
 
+        nodes_expected[node_a_name].backupresult = mock_backup_result(node_a_name)
+        nodes_expected[node_b_name].backupresult = mock_backup_result(node_b_name)
+        nodes_expected[node_c_name].backupresult = mock_backup_result(node_c_name)
+        nodes_expected[node_d_name].backupresult = mock_backup_result(node_d_name)
+        nodes_expected[node_x_name].backupresult = mock_backup_result(node_x_name)
+        nodes_expected[node_y_name].backupresult = mock_backup_result(node_y_name)
+        nodes_expected[node_z_name].backupresult = mock_backup_result(node_z_name)
+        nodes_expected[node_loose_a_name].backupresult = mock_backup_result(node_loose_a_name)
+        nodes_expected[node_loose_b_name].backupresult = mock_backup_result(node_loose_b_name)
+
         node_schedule_logs = {
-            node_a_name: mock_schedule_logs_successful(domain_a_name, schedule_a_name, node_a_name),
-            node_b_name: mock_schedule_logs_successful(domain_a_name, schedule_a_name, node_b_name),
-            node_c_name: mock_schedule_logs_successful(domain_a_name, schedule_a_name, node_c_name),
-            node_d_name: mock_schedule_logs_successful(domain_a_name, schedule_a_name, node_d_name),
-            node_x_name: mock_schedule_logs_successful(domain_z_name, schedule_z_name, node_x_name),
-            node_y_name: mock_schedule_logs_successful(domain_z_name, schedule_z_name, node_y_name),
-            node_z_name: mock_schedule_logs_successful(domain_z_name, schedule_z_name, node_z_name),
-            node_loose_a_name: mock_schedule_logs_successful(domain_loose_name,
-                                                            schedule_loose_name,
-                                                            node_loose_a_name),
-            node_loose_b_name: mock_schedule_logs_successful(domain_loose_name,
-                                                            schedule_loose_name,
-                                                            node_loose_b_name)
+            node_a_name: mock_schedule_logs(
+                domain_a_name,
+                node_a_name,
+                schedule_a_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_b_name: mock_schedule_logs(
+                domain_a_name,
+                node_b_name,
+                schedule_a_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_c_name: mock_schedule_logs(
+                domain_a_name,
+                node_c_name,
+                schedule_a_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_d_name: mock_schedule_logs(
+                domain_a_name,
+                node_d_name,
+                schedule_a_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_x_name: mock_schedule_logs(
+                domain_z_name,
+                node_x_name,
+                schedule_z_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_y_name: mock_schedule_logs(
+                domain_z_name,
+                node_y_name,
+                schedule_z_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_z_name: mock_schedule_logs(
+                domain_z_name,
+                node_z_name,
+                schedule_z_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_loose_a_name: mock_schedule_logs(
+                domain_loose_name,
+                node_loose_a_name,
+                schedule_loose_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+            node_loose_b_name: mock_schedule_logs(
+                domain_loose_name,
+                node_loose_b_name,
+                schedule_loose_name,
+                ScheduleStatusEnum.SUCCESSFUL
+            ),
+        }
+
+        nodes_expected[node_a_name].schedules = mock_schedules({
+            schedule_a_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_b_name].schedules = mock_schedules({
+            schedule_a_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_c_name].schedules = mock_schedules({
+            schedule_a_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_d_name].schedules = mock_schedules({
+            schedule_a_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_x_name].schedules = mock_schedules({
+            schedule_z_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_y_name].schedules = mock_schedules({
+            schedule_z_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_z_name].schedules = mock_schedules({
+            schedule_z_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_loose_a_name].schedules = mock_schedules({
+            schedule_loose_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+        nodes_expected[node_loose_b_name].schedules = mock_schedules({
+            schedule_loose_name: ScheduleStatusEnum.SUCCESSFUL
+        })
+
+
+        policy_domains_expected = {
+            domain_a_name: mock_policy_domain(domain_a_name, domain_a_contact,
+            [node for node in nodes_expected.values() \
+                  if node.policy_domain_name == domain_a_name]),
+            domain_z_name: mock_policy_domain(domain_z_name, domain_z_contact,
+            [node for node in nodes_expected.values() \
+                  if node.policy_domain_name == domain_z_name]),
+            domain_loose_name: mock_policy_domain(domain_loose_name, '',
+            [node for node in nodes_expected.values() \
+                  if node.policy_domain_name == domain_loose_name]),
         }
 
         data = TSMData()
@@ -160,6 +273,10 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(len(data.nodes), 9)
 
         self.assertTrue(all(node.has_client_schedules() for node in data.nodes.values()))
+
+        for policy_domain_name, policy_domain in policy_domains_expected.items():
+            self.assertTrue(data.domains[policy_domain_name])
+            self.assertEqual(data.domains[policy_domain_name], policy_domain)
 
     def test_jinja_parsing(self):
         """

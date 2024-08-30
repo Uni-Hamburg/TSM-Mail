@@ -47,3 +47,10 @@ class PolicyDomain:
         Checks if any node has any VMWare backup results.
         """
         return any(node.has_vm_backups() for node in self.nodes)
+
+    def __eq__(self, other: 'PolicyDomain') -> bool:
+        return self.contact == other.contact and \
+               self.name == other.name and \
+               self.client_backup_summary == other.client_backup_summary and \
+               self.vm_backup_summary == other.vm_backup_summary and \
+               self.nodes == other.nodes

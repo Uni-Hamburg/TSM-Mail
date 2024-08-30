@@ -112,6 +112,8 @@ class TSMData:
             if cl_stat_log is not None and len(cl_stat_log) > 1:
                 parsed_cl_res = ClientBackupResult()
                 parsed_cl_res.parse(cl_stat_log)
+                # Add up backup results if there are more than one
+                # in the last 24 hours
                 node.backupresult += parsed_cl_res
 
     def parse_vm_schedules(self, vms_log: List[str]):
