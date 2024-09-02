@@ -317,9 +317,6 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(rendered_template_expected, rendered_template)
 
     def test_vm_backup_parsing(self):
-        """
-        Tests parsing of VM backup results.
-        """
         domain_vm_name = 'DOMAIN_VM'
         domain_vm_contact = 'contact@vm.com'
 
