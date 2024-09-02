@@ -18,7 +18,7 @@ from parsing.report_template import ReportTemplate
 from tests.mock import mock_schedule_logs_successful, mock_schedule_logs_edge_cases, \
     mock_schedule_logs_failed, get_schedule_logs_missed, mock_node_log, \
     mock_backup_result_log, mock_backup_result, mock_schedule_logs, mock_schedules, \
-    mock_policy_domain
+    mock_policy_domain, mock_vm_result_logs, mock_vm_result
 
 class TestParsing(unittest.TestCase):
     """
@@ -286,7 +286,7 @@ class TestParsing(unittest.TestCase):
         domain_a_name = 'DOMAIN_A'
         schedule_a_name = 'SCHEDULE_A'
 
-        data = TSMData("TSMSRV1")
+        data = TSMData('TSMSRV1')
 
         schedules_log = {
             'NODE_A': mock_schedule_logs(domain_a_name, 'NODE_A', schedule_a_name, ScheduleStatusEnum.SUCCESSFUL),
@@ -315,6 +315,60 @@ class TestParsing(unittest.TestCase):
         with open('./tests/rendered_template_expected.html', 'r', encoding='utf-8') as f:
             rendered_template_expected = f.read()
         self.assertEqual(rendered_template_expected, rendered_template)
+
+    def test_vm_backup_parsing(self):
+        domain_vm_name = 'DOMAIN_VM'
+        domain_vm_contact = 'contact@vm.com'
+
+        node_vm_a_name = 'NODE_VM_A'
+        node_vm_b_name = 'NODE_VM_B'
+        node_vm_platform = 'TDP VMWare'
+
+        data = TSMData('TSMSRV1')
+
+        nodes_log = [
+            mock_node_log(node_vm_a_name, node_vm_platform, domain_vm_name, domain_vm_contact),
+            mock_node_log(node_vm_b_name, node_vm_platform, domain_vm_name, domain_vm_contact)
+        ]
+
+        vm_results_node_vm_a_expected = [
+            mock_vm_result('VM_SCHEDULE_A', 'VM_A', False, 0, node_vm_a_name),
+            mock_vm_result('VM_SCHEDULE_A', 'VM_B', True, 999_999, node_vm_a_name),
+        ]
+
+        vm_results_node_vm_b_expected = [
+            mock_vm_result('VM_SCHEDULE_B', 'VM_C', False,0, node_vm_b_name),
+            mock_vm_result('VM_SCHEDULE_B', 'VM_D', True, 42, node_vm_b_name)
+        ]
+
+        nodes_expected = {
+            node_vm_a_name: Node(node_vm_a_name, node_vm_platform, domain_vm_name,
+                                 NODE_DECOMM_STATE_NO,
+                                 vm_results=vm_results_node_vm_a_expected),
+            node_vm_b_name: Node(node_vm_b_name, node_vm_platform, domain_vm_name,
+                                 NODE_DECOMM_STATE_NO,
+                                 vm_results=vm_results_node_vm_b_expected)
+        }
+
+        policy_domains_expected = {
+            domain_vm_name: mock_policy_domain(domain_vm_name,
+                                               domain_vm_contact,
+                                               list(nodes_expected.values()))
+        }
+
+        vm_logs = mock_vm_result_logs(vm_results_node_vm_a_expected + vm_results_node_vm_b_expected)
+
+        data.parse_nodes(nodes_log)
+        data.parse_vm_schedules(vm_logs)
+
+        self.assertEqual(len(data.domains), 1)
+        self.assertEqual(len(data.nodes), 2)
+
+        self.assertTrue(all(node.has_vm_backups() for node in data.nodes.values()))
+
+        for policy_domain_name, policy_domain in policy_domains_expected.items():
+            self.assertTrue(data.domains[policy_domain_name])
+            self.assertEqual(data.domains[policy_domain_name], policy_domain)
 
 if __name__ == '__main__':
     unittest.main()

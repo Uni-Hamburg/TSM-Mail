@@ -9,17 +9,21 @@ from functools import reduce
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
 from parsing.client_backup_result import ClientBackupResult
+from parsing.vmresult import VMResult
 from parsing.schedule_status import ScheduleStatus, ScheduleStatusEnum
 from parsing.constants import NODE_DECOMM_STATE_NO, HISTORY_MAX_ITEMS, STATUS_COMPLETED_STR, \
     STATUS_FAILED_NO_RESTART_STR, STATUS_FAILED_STR, STATUS_FUTURE_STR, STATUS_IN_PROGRESS_STR, \
     STATUS_MISSED_STR, STATUS_PENDING_STR, STATUS_RESTARTED_STR, STATUS_SEVERED_STR, \
     STATUS_STARTED_STR, SCHED_ACT_START_TIME_DEFAULT
 
-def format_time(offset_days = 0) -> str:
+VM_BACKUP_ACTIVITY_STR = 'BACKUP'
+VM_BACKUP_ACTIVITY_TYPE_STR = 'Incremental Forever - Full'
+
+def format_time(offset_days: int=0, offset_hours: int=0) -> str:
     """
     Generates a formatted time string for test server logs starting from datetime.now().
     """
-    time = datetime.now() + timedelta(days=offset_days)
+    time = datetime.now() + timedelta(days=offset_days, hours=offset_hours)
     return time.strftime('%Y-%m-%d %H:%M:%S')
 
 def mock_schedule_logs_successful(domain: str='DOMAIN', schedule: str='SCHEDULE', node_name: str='NODE') -> List[str]:
@@ -168,6 +172,30 @@ def mock_node_log(node_name: str="NODE", platform_name: str="Unknown Platform",
     """
     return f'{node_name},{platform_name},{domain_name},,{policy_domain_contact},{node_contact}'
 
+def mock_vm_reuslt_log(vm_result: VMResult) -> str:
+    """
+    Creates a mocked VM backup result
+    """
+    return f'{vm_result.schedule_name},{vm_result.vm_name},{format_time()},' \
+           f'{format_time(offset_hours=1)},{'YES' if vm_result.successful else 'NO'},' \
+           f'{VM_BACKUP_ACTIVITY_STR},{VM_BACKUP_ACTIVITY_TYPE_STR},' \
+           f'{vm_result.backed_up_bytes},{vm_result.entity}'
+
+def mock_vm_result_logs(vm_results: List[VMResult]) -> List[str]:
+    """
+    Creates mocked VM backup results
+    """
+    return [mock_vm_reuslt_log(vm_result) for vm_result in vm_results]
+
+def mock_vm_result(schedule_name: str, vm_name: str, successful: bool, backed_up_bytes: int,
+                   entity_name: str) -> VMResult:
+    """
+    Creates a mocked VM backup result with current time as start_time.
+    """
+    return VMResult(schedule_name, vm_name, format_time(), format_time(offset_hours=1), successful,
+                    VM_BACKUP_ACTIVITY_STR, VM_BACKUP_ACTIVITY_TYPE_STR, backed_up_bytes,
+                    entity_name)
+
 def mock_schedules(schedule_names_and_status: Dict[str, ScheduleStatusEnum]) -> Dict[str, ScheduleStatus]:
     """
     Generates test schedules using the provided dictionary with name and status.
@@ -228,5 +256,14 @@ def mock_policy_domain(domain_name: str, domain_contact: str, nodes: List[Node])
     # policy_domain.client_backup_summary = sum([node.backupresult for node in policy_domain.nodes])
 
     backupresults = [node.backupresult for node in policy_domain.nodes]
-    policy_domain.client_backup_summary += reduce(lambda s1, s2: s1 + s2, backupresults)
+    vm_backup_results = []
+    for node in policy_domain.nodes:
+        vm_backup_results.extend(node.vm_results)
+
+    if backupresults:
+        policy_domain.client_backup_summary += reduce(lambda s1, s2: s1 + s2, backupresults)
+
+    if vm_backup_results:
+        policy_domain.vm_backup_summary += reduce(lambda s1, s2: s1 + s2, vm_backup_results)
+
     return policy_domain

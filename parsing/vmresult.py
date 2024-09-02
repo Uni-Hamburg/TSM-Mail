@@ -36,8 +36,8 @@ class VMResult:
                  activity_type: str = "", backed_up_bytes: int = 0, entity: str = ""):
         self.schedule_name = schedule_name
         self.vm_name = vm_name
-        self.start_time = start_time.split('.')[0] # Remove millisecs
-        self.end_time = end_time.split('.')[0]   # Remove millisecs
+        self.start_time = start_time.split('.')[0].strip() # Remove millisecs
+        self.end_time = end_time.split('.')[0].strip()   # Remove millisecs
         self.successful = successful
         self.activity = activity
         self.activity_type = activity_type

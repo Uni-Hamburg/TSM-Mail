@@ -2,7 +2,7 @@
 Contains the Node class which holds all relevant information for a TSM node.
 """
 
-from typing import Dict
+from typing import Dict, List
 
 from parsing.client_backup_result import ClientBackupResult
 from parsing.constants import NODE_DECOMM_STATE_YES
@@ -29,7 +29,7 @@ class Node:
     """
     def __init__(self, name: str, platform: str, policy_domain_name: str, decomm_state: str,
                  contact: str = "", schedules: Dict[str, ScheduleStatus] = None,
-                 backupresult: 'ClientBackupResult' = None, vm_results: 'VMResult' = None):
+                 backupresult: 'ClientBackupResult' = None, vm_results: List['VMResult'] = None):
         self.name = name
         self.policy_domain_name = policy_domain_name
         self.platform = platform
