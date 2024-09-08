@@ -131,23 +131,23 @@ class SchedulesParser:
             else:
                 sched_stat.status = ScheduleStatusEnum.UNKNOWN
 
-            if len(line_split[COLUMN_QE_SCHED_NAME]) > 0:
+            if line_split[COLUMN_QE_SCHED_NAME]:
                 sched_stat.schedule_name = line_split[COLUMN_QE_SCHED_NAME]
 
-            if len(line_split[COLUMN_QE_RESULT]) > 0:
+            if line_split[COLUMN_QE_RESULT]:
                 sched_stat.return_code = line_split[COLUMN_QE_RESULT]
             else:
                 sched_stat.return_code = SCHED_RETURN_CODE_DEFAULT
 
-            if len(line_split[COLUMN_QE_SCHED_START]) > 0:
+            if line_split[COLUMN_QE_SCHED_START]:
                 sched_stat.start_time = line_split[COLUMN_QE_SCHED_START]
 
-            if len(line_split[COLUMN_QE_SCHED_ACT_START]) > 0:
+            if line_split[COLUMN_QE_SCHED_ACT_START]:
                 sched_stat.actual_start_time = line_split[COLUMN_QE_SCHED_ACT_START]
             else:
                 sched_stat.actual_start_time = SCHED_ACT_START_TIME_DEFAULT
 
-            if len(line_split[COLUMN_QE_TIME_COMPLETED]) > 0:
+            if line_split[COLUMN_QE_TIME_COMPLETED]:
                 sched_stat.end_time = line_split[COLUMN_QE_TIME_COMPLETED]
             else:
                 sched_stat.end_time = SCHED_END_TIME_DEFAULT
