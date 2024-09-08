@@ -2,7 +2,7 @@
 Contains PolicyDomain class which contains all relevant information to a TSM policy domain.
 """
 
-from typing import List
+from typing import List, Optional
 
 from parsing.node import Node
 from parsing.client_backup_result import ClientBackupResult
@@ -18,13 +18,13 @@ class PolicyDomain:
         name:       Name of policy domain
         contact:    Contact mail for PolicyDomain
     """
-    def __init__(self, nodes: List[Node] = None, name: str = "", contact: str = ""):
+    def __init__(self, nodes: Optional[List[Node]] = None, name: str = "", contact: str = ""):
         self.contact = contact
         self.name = name
         self.client_backup_summary = ClientBackupResult()
         self.vm_backup_summary = VMResult()
 
-        if nodes is not None:
+        if nodes:
             self.nodes = nodes
         else:
             self.nodes = []
@@ -48,7 +48,7 @@ class PolicyDomain:
         """
         return any(node.has_vm_backups() for node in self.nodes)
 
-    def __eq__(self, other: 'PolicyDomain') -> bool:
+    def __eq__(self, other) -> bool:
         return self.contact == other.contact and \
                self.name == other.name and \
                self.client_backup_summary == other.client_backup_summary and \

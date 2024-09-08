@@ -54,7 +54,7 @@ class TSMData:
             if node_contact_field and not domain_description_field:
                 # Remove string delimiters when multiple mail contacts are supplied
                 if node_contact_field.startswith('"'):
-                    node_contact_field = node_contact_field[1:len(node_contact_field - 1)]
+                    node_contact_field = node_contact_field[1:len(node_contact_field) - 1]
                 self.nodes[node_name] = Node(node_name, platform_name, policy_domain_name,
                                              node_decomm_state, node_contact_field)
             else:
@@ -85,7 +85,7 @@ class TSMData:
                 self.__parse_node_status(node, sched_stat_logs, cl_stat_logs)
 
                 # Add to policy v summary
-                if node.backupresult is not None:
+                if node.backupresult:
                     domain.client_backup_summary += node.backupresult
 
                     # Find maximum processing time for processing time summary cell
@@ -109,7 +109,7 @@ class TSMData:
         if node.name in cl_stat_logs:
             cl_stat_log = cl_stat_logs[node.name]
 
-            if cl_stat_log is not None and len(cl_stat_log) > 1:
+            if cl_stat_log and len(cl_stat_log) > 1:
                 parsed_cl_res = ClientBackupResult()
                 parsed_cl_res.parse(cl_stat_log)
                 # Add up backup results if there are more than one

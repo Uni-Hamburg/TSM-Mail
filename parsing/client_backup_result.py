@@ -9,7 +9,7 @@ from typing import List
 
 import tabulate
 
-from parsing.constants import SESSION_NUM_DELIM, LINE_DELIM, COLUMN_NODE_NAME, TDP_MSSQL_STR, \
+from parsing.constants import SESSION_NUM_DELIM, TDP_MSSQL_STR, \
     INSPECTED_STR, BACKED_UP_STR, UPDATED_STR, EXPIRED_STR, FAILED_STR, RETRIES_STR, \
     BYTES_INSPECTED_STR, BYTES_TRANSFERRED_STR, AGGREGATE_DATA_RATE_STR, PROCESSING_TIME_STR
 
@@ -147,9 +147,6 @@ class ClientBackupResult:
             logger.info("Provided client is log empty.")
             return
 
-        # Get node name from first log entry
-        # self.node_name = client_log[0].split(LINE_DELIM)[COLUMN_NODE_NAME]
-
         for item in client_log:
             # TODO: Implement TDP MSSQL parsing for client results.
             if TDP_MSSQL_STR in item:
@@ -272,7 +269,7 @@ class ClientBackupResult:
 
         return f"Data of node: {self.node_name}\n{table}"
 
-    def __eq__(self, other: 'ClientBackupResult') -> bool:
+    def __eq__(self, other) -> bool:
         return self.inspected == other.inspected and \
                self.backed_up == other.backed_up and \
                self.updated == other.updated and \

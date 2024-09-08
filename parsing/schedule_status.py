@@ -62,7 +62,7 @@ class ScheduleStatus:
         self.history: List[ScheduleStatusEnum] = \
             [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
 
-    def __eq__(self, other: 'ScheduleStatus') -> bool:
+    def __eq__(self, other) -> bool:
         return self.status == other.status and \
                self.schedule_name == other.schedule_name and \
                self.return_code == other.return_code and \
@@ -92,7 +92,7 @@ class SchedulesParser:
         }
 
     # Remove schedules which are older than 24 hours
-    def __remove_old_schedules(self, scheds: Dict[str, ScheduleStatus]) -> Dict[str, ScheduleStatusEnum]:
+    def __remove_old_schedules(self, scheds: Dict[str, ScheduleStatus]) -> Dict[str, ScheduleStatus]:
         new_scheds: Dict[str, ScheduleStatus] = {}
 
         for sched_name, schedule in scheds.items():

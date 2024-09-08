@@ -13,7 +13,7 @@ import logging
 import logging.handlers
 import argparse
 from string import Template
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 import yaml
@@ -32,7 +32,7 @@ from mailer.status_mailer import StatusMailer
 
 logger = logging.getLogger("main")
 
-def parse_contacts(contact_str: str) -> str:
+def parse_contacts(contact_str: str) -> Optional[str]:
     """
     Parse e-mail strings using regex.
     """
@@ -47,7 +47,7 @@ def parse_contacts(contact_str: str) -> str:
 
     return contacts
 
-def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDomain]:
+def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, PolicyDomain]]:
     """
     Create a collection containing all nodes which have individual contacts defined
     instead of being part of a policy domain with a defined contact.
@@ -57,6 +57,10 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDoma
     for node in nodes:
         if node.contact:
             contacts = parse_contacts(node.contact)
+            if not contacts:
+                logger.warning("parse_contacts didn't return a valid contact string.") 
+                continue
+
             if contacts not in loose_nodes_collection:
                 loose_nodes_collection[contacts] = PolicyDomain([node], pd_name)
             else:
@@ -112,11 +116,17 @@ def send_mail_reports(config: Dict[str, Any],
             break
 
         # Nodes to be collected when policy domain has no contact specified
-        loose_nodes: Dict[str, PolicyDomain] = {}
+        loose_nodes: Optional[Dict[str, PolicyDomain]] = {}
 
         for policy_domain in data[inst].domains.values():
             if policy_domain.contact:
                 contacts = parse_contacts(policy_domain.contact)
+                if not contacts:
+                    logger.warning("parse_contacts didn't return a \
+                                    valid contact string, skipping policy domain %s.",
+                                    policy_domain.name)
+                    continue
+
                 send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                           contacts, reply_to, bcc, inst, time_string)
             elif not loose_nodes:
@@ -127,6 +137,10 @@ def send_mail_reports(config: Dict[str, Any],
                                     PolicyDomain without contact information.")
 
         # Send mail reports for collected loose nodes
+        if not loose_nodes:
+            logger.info("No nodes in loose_nodes to process.")
+            return
+
         for contact, policy_domain in loose_nodes.items():
             send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                       contact, reply_to, bcc, inst, time_string)
@@ -294,7 +308,7 @@ def main():
     else:
         logger.info("No pickled data supplied, fetching from TSM.")
 
-    if config["tsm_instances"] is not None and not data:
+    if config["tsm_instances"] and not data:
         for inst in config["tsm_instances"]:
             data[inst] = collect_and_parse_instance(config, inst, pwd)
 

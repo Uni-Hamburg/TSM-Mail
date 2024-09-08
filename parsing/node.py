@@ -2,11 +2,12 @@
 Contains the Node class which holds all relevant information for a TSM node.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from parsing.client_backup_result import ClientBackupResult
 from parsing.constants import NODE_DECOMM_STATE_YES
 from parsing.schedule_status import ScheduleStatus, ScheduleStatusEnum
+from parsing.vmresult import VMResult
 
 class Node:
     """
@@ -28,13 +29,14 @@ class Node:
         vm_results:         VM backup schedule results associated with this node
     """
     def __init__(self, name: str, platform: str, policy_domain_name: str, decomm_state: str,
-                 contact: str = "", schedules: Dict[str, ScheduleStatus] = None,
-                 backupresult: 'ClientBackupResult' = None, vm_results: List['VMResult'] = None):
+                 contact: str = "", schedules: Optional[Dict[str, ScheduleStatus]] = None,
+                 backupresult: Optional['ClientBackupResult'] = None,
+                 vm_results: Optional[List['VMResult']] = None):
         self.name = name
         self.policy_domain_name = policy_domain_name
         self.platform = platform
 
-        if backupresult is not None:
+        if backupresult:
             self.backupresult = backupresult
         else:
             self.backupresult = ClientBackupResult(name)
@@ -44,7 +46,7 @@ class Node:
         else:
             self.decomm_state = False
 
-        if vm_results is not None:
+        if vm_results:
             self.vm_results = vm_results
         else:
             self.vm_results = []
@@ -88,7 +90,7 @@ class Node:
             return True
         return False
 
-    def __eq__(self, other: 'Node') -> bool:
+    def __eq__(self, other) -> bool:
         return self.name == other.name and \
                self.policy_domain_name == other.policy_domain_name and \
                self.platform == other.platform and \

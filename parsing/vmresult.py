@@ -88,7 +88,7 @@ class VMResult:
 
         return res
 
-    def __eq__(self, other: 'VMResult') -> bool:
+    def __eq__(self, other) -> bool:
         return self.schedule_name == other.schedule_name and \
                self.vm_name == other.vm_name and \
                self.start_time == other.start_time and \

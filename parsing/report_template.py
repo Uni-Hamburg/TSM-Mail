@@ -21,7 +21,7 @@ class ReportTemplate():
                                           extensions=['jinja2.ext.do'])
         self.__template = self.__template_env.get_template(os.path.basename(template_path))
         self.__template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
-    
+
     def render(self, policy_domain: PolicyDomain) -> str:
         """
         Renders the report template and returns a HTML string.
