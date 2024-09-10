@@ -60,7 +60,15 @@ class ScheduleStatus:
 
         # Initialize history with "UNKNOWN" status
         self.history: List[ScheduleStatusEnum] = \
-            [ScheduleStatusEnum.UNKNOWN for i in range(HISTORY_MAX_ITEMS)]
+            [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
+
+    def __eq__(self, other) -> bool:
+        return self.status == other.status and \
+               self.schedule_name == other.schedule_name and \
+               self.return_code == other.return_code and \
+               self.start_time == other.start_time and \
+               self.actual_start_time == other.actual_start_time and \
+               self.end_time == other.end_time
 
 class SchedulesParser:
     """
@@ -84,7 +92,7 @@ class SchedulesParser:
         }
 
     # Remove schedules which are older than 24 hours
-    def __remove_old_schedules(self, scheds: Dict[str, ScheduleStatus]) -> Dict[str, ScheduleStatusEnum]:
+    def __remove_old_schedules(self, scheds: Dict[str, ScheduleStatus]) -> Dict[str, ScheduleStatus]:
         new_scheds: Dict[str, ScheduleStatus] = {}
 
         for sched_name, schedule in scheds.items():
@@ -123,37 +131,40 @@ class SchedulesParser:
             else:
                 sched_stat.status = ScheduleStatusEnum.UNKNOWN
 
-            if len(line_split[COLUMN_QE_SCHED_NAME]) > 0:
+            if line_split[COLUMN_QE_SCHED_NAME]:
                 sched_stat.schedule_name = line_split[COLUMN_QE_SCHED_NAME]
 
-            if len(line_split[COLUMN_QE_RESULT]) > 0:
+            if line_split[COLUMN_QE_RESULT]:
                 sched_stat.return_code = line_split[COLUMN_QE_RESULT]
             else:
                 sched_stat.return_code = SCHED_RETURN_CODE_DEFAULT
 
-            if len(line_split[COLUMN_QE_SCHED_START]) > 0:
+            if line_split[COLUMN_QE_SCHED_START]:
                 sched_stat.start_time = line_split[COLUMN_QE_SCHED_START]
 
-            if len(line_split[COLUMN_QE_SCHED_ACT_START]) > 0:
+            if line_split[COLUMN_QE_SCHED_ACT_START]:
                 sched_stat.actual_start_time = line_split[COLUMN_QE_SCHED_ACT_START]
             else:
                 sched_stat.actual_start_time = SCHED_ACT_START_TIME_DEFAULT
 
-            if len(line_split[COLUMN_QE_TIME_COMPLETED]) > 0:
+            if line_split[COLUMN_QE_TIME_COMPLETED]:
                 sched_stat.end_time = line_split[COLUMN_QE_TIME_COMPLETED]
             else:
                 sched_stat.end_time = SCHED_END_TIME_DEFAULT
 
             # Check if schedule exists in dict and add schedule line to history
             if sched_stat.schedule_name in scheds:
-                if sched_stat.start_time != '':
+                if sched_stat.start_time:
                     sched_start_date = datetime.strptime(sched_stat.start_time, '%Y-%m-%d %H:%M:%S')
                     current_date = datetime.now()
 
                     # Calculate position in 15 day history list
                     date_diff = current_date - sched_start_date
 
-                    scheds[sched_stat.schedule_name].history[
-                        (HISTORY_MAX_ITEMS - 1) - date_diff.days] = sched_stat.status
+                    # Check if date_diff is within 15 days of current_date.
+                    # History is set to be maximum 15 days.
+                    if date_diff.days <= 15 and date_diff.days > 0:
+                        scheds[sched_stat.schedule_name].history[
+                            HISTORY_MAX_ITEMS - date_diff.days] = sched_stat.status
 
         return self.__remove_old_schedules(scheds)

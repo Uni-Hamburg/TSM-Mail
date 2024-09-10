@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+    }
+
+    h3 {
+        margin: auto;
+        text-align: center;
+    }
+
+    .bold_text {
+        font-weight: bold;
+    }
+
+    .table_history {
+        border-collapse: collapse;
+    }
+
+    .table_cell_history {
+        padding: 0px;
+    }
+
+    .table_main {
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    thead {
+        display: table-header-group;
+        vertical-align: middle;
+        border-color: inherit;
+    }
+
+    th {
+        padding: 4px 4px 4px 4px;
+        text-align: left;
+        vertical-align: middle;
+        background-color: #62acdd;
+    }
+
+    tr {
+        display: table-row;
+        vertical-align: inherit;
+        border-color: inherit;
+    }
+
+    td {
+        padding: 0px 2px 0px 2px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    table, th, td {
+        border: 1px solid rgb(92, 92, 92);
+        border-collapse: collapse;
+    }
+
+    .alternate_row {
+        background-color:#d4d4d4;
+    }
+
+    .objects_failed_cell {
+        text-align: right;
+        background-color: #ff3030;
+    }
+
+    .objects_failed_cell_summary {
+        font-weight: bold;
+        text-align: right;
+        background-color: #ff3030;
+    }
+
+    .align_right {
+        text-align: right;
+    }
+
+    .align_right_bold_text {
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .history_successful {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #73ff00;
+    }
+
+    .history_missed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ffae00;
+    }
+
+    .history_failed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ff3030;
+    }
+
+    .history_severed {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #5734f3;
+    }
+
+    .history_failed_no_restart {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ff3030;
+    }
+
+    .history_restarted {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_started {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_in_progress {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_pending {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #46cf46;
+    }
+
+    .history_none {
+        padding: 0px;
+        width: 16px;
+        height: 16px;
+        background-color: #ffffff;
+    }
+
+    .missed {
+        background-color: #ffae00;
+    }
+
+    .failed {
+        background-color: #ff3030;
+    }
+
+    .failed_no_restart {
+        background-color: #ff3030;
+    }
+
+    .restarted {
+        background-color: #46cf46;
+    }
+
+    .severed {
+        background-color: #5734f3;
+    }
+
+    .started {
+        background-color: #46cf46;
+    }
+
+    .in_progress {
+        background-color: #46cf46;
+    }
+
+    .pending {
+        background-color: #46cf46;
+    }
+
+    .vm_successful {
+        background-color: #46cf46;
+    }
+
+    .vm_not_successful {
+        background-color: #ff3030;
+    }
+</style>
+
+<body><h3>Client schedules which have not completed</h3>
+
+    <table class="table_main" align="center">
+        <tr>
+            <th>Nodename</th>
+            <th>Schedule</th>
+            <th>Start time</th>
+            <th>End time</th>
+            <th>Status</th>
+            <th>Return Code</th>
+            <th>15 day history</th>
+        </tr>
+        
+        
+        
+        <tr>
+        <td>NODE_B</td>
+            <td>SCHEDULE_A</td>
+            <td>Not started</td>
+            <td>1970-01-01 00:00:00</td><td class="missed">Missed</td><td>0</td>
+            <td class="table_cell_history">
+                <table class="table_history">
+                    <tr>
+                        <td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_pending"> </td><td class="history_in_progress"> </td><td class="history_started"> </td><td class="history_restarted"> </td><td class="history_failed_no_restart"> </td><td class="history_severed"> </td><td class="history_failed"> </td><td class="history_missed"> </td><td class="history_successful"> </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        
+        <tr class="alternate_row"><td>NODE_C</td>
+            <td>SCHEDULE_A</td>
+            <td>Not started</td>
+            <td>1970-01-01 00:00:00</td><td class="failed">Failed</td><td>0</td>
+            <td class="table_cell_history">
+                <table class="table_history">
+                    <tr>
+                        <td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_none"> </td><td class="history_pending"> </td><td class="history_in_progress"> </td><td class="history_started"> </td><td class="history_restarted"> </td><td class="history_failed_no_restart"> </td><td class="history_severed"> </td><td class="history_failed"> </td><td class="history_missed"> </td><td class="history_successful"> </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+    </table><h3>Client activity for the last 24 hours</h3>
+
+    <table class="table_main" align="center">
+        <tr>
+            <th>Nodename</th>
+            <th>Platform</th>
+            <th>Objects inspected</th>
+            <th>Objects backed up</th>
+            <th>Objects updated</th>
+            <th>Objects expired</th>
+            <th>Objects failed</th>
+            <th>Retries</th>
+            <th>Bytes inspected (GB)</th>
+            <th>Bytes transferred (GB)</th>
+            <th>Aggregate data transfer rate (MB/sec)</th>
+            <th>Processing time</th>
+        </tr>
+        <tr><td>NODE_A</td>
+            <td>Linux x86-64</td>
+            <td class="align_right">11.765.672</td>
+            <td class="align_right">8.553</td>
+            <td class="align_right">4.938</td>
+            <td class="align_right">327</td>
+            
+            <td class="align_right">0</td>
+            
+            <td class="align_right">10</td>
+            <td class="align_right">67.870,00</td>
+            <td class="align_right">216,50</td>
+            <td class="align_right">43,42</td>
+            <td class="align_right">01:27:08</td>
+        </tr>
+        <tr class="alternate_row"><td>NODE_B</td>
+            <td>Linux x86-64</td>
+            <td class="align_right">11.765.672</td>
+            <td class="align_right">8.553</td>
+            <td class="align_right">4.938</td>
+            <td class="align_right">327</td>
+            
+            <td class="align_right">0</td>
+            
+            <td class="align_right">10</td>
+            <td class="align_right">67.870,00</td>
+            <td class="align_right">216,50</td>
+            <td class="align_right">43,42</td>
+            <td class="align_right">01:27:08</td>
+        </tr>
+        <tr><td>NODE_C</td>
+            <td>Linux x86-64</td>
+            <td class="align_right">11.765.672</td>
+            <td class="align_right">8.553</td>
+            <td class="align_right">4.938</td>
+            <td class="align_right">327</td>
+            
+            <td class="align_right">0</td>
+            
+            <td class="align_right">10</td>
+            <td class="align_right">67.870,00</td>
+            <td class="align_right">216,50</td>
+            <td class="align_right">43,42</td>
+            <td class="align_right">01:27:08</td>
+        </tr><tr class="alternate_row"><td class="bold_text">Summary</td>
+            <td> </td>
+            <td class="align_right_bold_text">35.297.016</td>
+            <td class="align_right_bold_text">25.659</td>
+            <td class="align_right_bold_text">14.814</td>
+            <td class="align_right_bold_text">981</td>
+            
+            <td class="align_right_bold_text">0</td>
+            
+            <td class="align_right_bold_text">30</td>
+            <td class="align_right_bold_text">203.610,00</td>
+            <td class="align_right_bold_text">649,50</td>
+            <td class="align_right_bold_text">130,25</td>
+            <td class="align_right_bold_text">04:21:24</td>
+        </tr>
+    </table>
+
+    
+</body>
+</html>

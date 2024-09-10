@@ -4,12 +4,10 @@ status_mailer.py generates status mails from node and policy domain data
 
 import logging
 import smtplib
-import os
 from email.message  import EmailMessage
-from jinja2 import Environment, FileSystemLoader
 
 from parsing.policy_domain import PolicyDomain
-from parsing.schedule_status import ScheduleStatusEnum
+from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
@@ -28,12 +26,7 @@ class StatusMailer:
         self.__smtp_port = smtp_port
 
         # Load jinja2 mail HTML template
-        self.__template_file_loader = FileSystemLoader(os.path.dirname(template_path))
-        self.__template_env = Environment(loader=self.__template_file_loader,
-                                          extensions=['jinja2.ext.do'])
-
-        self.__template = self.__template_env.get_template(os.path.basename(template_path))
-        self.__template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
+        self.__template = ReportTemplate(template_path)
 
         logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
         # Establish connection to the SMTP server
@@ -50,18 +43,18 @@ class StatusMailer:
         message["From"] = sender_addr
         message["To"] = receiver_addr
 
-        if replyto_addr != "":
+        if replyto_addr:
             message["Reply-to"] = replyto_addr
         else:
             logger.info("No Reply-to configured. Skipping.")
 
-        if bcc_addr != "":
+        if bcc_addr:
             message["Bcc"] = bcc_addr
         else:
             logger.info("No Bcc configured. Skipping.")
 
         # Render HTML template of message containing node data from TSM nodes
-        message_html = self.__template.render(pd=policy_domain)
+        message_html = self.__template.render(policy_domain)
 
         message.add_header('Content-Type', 'text/html')
         message.add_header('X-Auto-Response-Suppress', 'All')

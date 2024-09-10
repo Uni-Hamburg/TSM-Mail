@@ -5,7 +5,7 @@ Contains functions to interface with the TSM environment through the admin conso
 import subprocess
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Any
+from typing import Dict, List, Any, cast
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
@@ -28,7 +28,7 @@ class CollectorConfig():
         self.pwd = pwd
 
 
-def __issue_cmd(config: CollectorConfig, cmd: str) -> bytearray:
+def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
     # Sends a command to the TSM server using the admin console 'dsmadmc'.
     try:
         cmd_result = subprocess.check_output(
@@ -40,10 +40,10 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytearray:
         if "ANR2034E" in str(exception.output):
             logger.info('Query "%s" \nreturned error: "%s", \
                         returning empty string.', cmd, exception.output)
-            return bytearray()
+            return bytes()
 
         logger.error("Error calling dsmadmc: %s", exception.output)
-        return exception
+        raise exception
 
 def __collect_schedule_for_node(config: CollectorConfig,
                                 sched_logs: Dict[str, List[str]],
@@ -99,7 +99,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     today_str = today.strftime("%Y-%m-%d %H:%M:%S")
     yesterday_str = yesterday.strftime("%Y-%m-%d %H:%M:%S")
 
-    logger.info("Collecting VM schedules on %s...", config.inst)
+    logger.info("Collecting VMWare schedules on %s...", config.inst)
 
     vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, " \
                                        "successful, activity, activity_type, bytes, entity " \
@@ -110,7 +110,7 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
     vm_results_str = vm_results_r.decode("utf-8", "replace")
     vm_results_list = vm_results_str.splitlines()
 
-    logger.info("Collected VM schedule data for %d VMs.", len(vm_results_list))
+    logger.info("Collected VMWare schedule data for %d VMs.", len(vm_results_list))
 
     return vm_results_list
 
@@ -119,7 +119,7 @@ def collect_schedule_logs(config: CollectorConfig, log: List[str]) -> Dict[str, 
     Reads and returns schedule logs for a node.
     """
     sched_logs_manager = mp.Manager()
-    sched_logs = sched_logs_manager.dict()
+    sched_logs = cast(Dict[str, List[str]], sched_logs_manager.dict())
 
     nodes: List[str] = []
 
@@ -137,7 +137,7 @@ def collect_client_backup_results(config: CollectorConfig, log: List[str]) -> Di
     Gets all client backup results for the last 24 hours from a node.
     """
     cl_logs_manager = mp.Manager()
-    cl_logs = cl_logs_manager.dict()
+    cl_logs = cast(Dict[str, List[str]], cl_logs_manager.dict())
 
     nodes: List[str] = []
 

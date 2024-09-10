@@ -36,8 +36,8 @@ class VMResult:
                  activity_type: str = "", backed_up_bytes: int = 0, entity: str = ""):
         self.schedule_name = schedule_name
         self.vm_name = vm_name
-        self.start_time = start_time.split('.')[0] # Remove millisecs
-        self.end_time = end_time.split('.')[0]   # Remove millisecs
+        self.start_time = start_time.split('.')[0].strip() # Remove millisecs
+        self.end_time = end_time.split('.')[0].strip()   # Remove millisecs
         self.successful = successful
         self.activity = activity
         self.activity_type = activity_type
@@ -45,12 +45,10 @@ class VMResult:
         self.backed_up_bytes_unit = "GB"
         self.entity = entity
 
-        if start_time != "":
+        if start_time:
             self.elapsed_time = self.__calculate_elapsed_time()
         else:
             self.elapsed_time = timedelta()
-
-        self.update_str_representation()
 
     def __convert_notation(self, num_string: str) -> str:
         # Convert from US notation to EU notation.
@@ -70,19 +68,35 @@ class VMResult:
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-    def update_str_representation(self):
+    def backed_up_bytes_str(self) -> str:
         """
-        Update string representation of numeric backup result values.
+        Returns a formatted string for "backed_up_bytes".
         """
-        self.backed_up_bytes_str = self.__format_backed_up_bytes()
-        self.elapsed_time_str = self.__format_elapsed_time()
+        return self.__format_backed_up_bytes()
 
-    def __add__(self, other: 'VMResult') -> 'VMResult':
+    def elapsed_time_str(self):
+        """
+        Returns a formatted string for "elapsed_time".
+        """
+        return self.__format_elapsed_time()
+
+    def __add__(self, other) -> 'VMResult':
         res = VMResult()
 
         res.backed_up_bytes = self.backed_up_bytes + other.backed_up_bytes
         res.elapsed_time = self.elapsed_time + other.elapsed_time
 
-        res.update_str_representation()
-
         return res
+
+    def __eq__(self, other) -> bool:
+        return self.schedule_name == other.schedule_name and \
+               self.vm_name == other.vm_name and \
+               self.start_time == other.start_time and \
+               self.end_time == other.end_time and \
+               self.successful == other.successful and \
+               self.activity == other.activity and \
+               self.activity_type == other.activity_type and \
+               self.backed_up_bytes == other.backed_up_bytes and \
+               self.backed_up_bytes_unit == other.backed_up_bytes_unit and \
+               self.entity == other.entity and \
+               self.elapsed_time == other.elapsed_time

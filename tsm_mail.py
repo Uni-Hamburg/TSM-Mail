@@ -13,29 +13,26 @@ import logging
 import logging.handlers
 import argparse
 from string import Template
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 import yaml
-from jinja2 import Environment, FileSystemLoader
-
-from parsing.helper import check_non_successful_schedules
 
 from parsing.tsm_data import TSMData
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
-from parsing.schedule_status import ScheduleStatusEnum
 from parsing.constants import LOG_LEVEL_DEBUG_STR, LOG_LEVEL_ERROR_STR, LOG_LEVEL_INFO_STR, \
     LOG_LEVEL_WARN_STR
+from parsing.report_template import ReportTemplate
 
-from collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
+from collector.collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
     collect_client_backup_results, collect_schedule_logs
 
 from mailer.status_mailer import StatusMailer
 
 logger = logging.getLogger("main")
 
-def parse_contacts(contact_str: str) -> str:
+def parse_contacts(contact_str: str) -> Optional[str]:
     """
     Parse e-mail strings using regex.
     """
@@ -50,7 +47,7 @@ def parse_contacts(contact_str: str) -> str:
 
     return contacts
 
-def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDomain]:
+def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, PolicyDomain]]:
     """
     Create a collection containing all nodes which have individual contacts defined
     instead of being part of a policy domain with a defined contact.
@@ -58,26 +55,18 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Dict[str, PolicyDoma
     loose_nodes_collection: Dict[str, PolicyDomain] = {}
 
     for node in nodes:
-        if node.contact != "":
+        if node.contact:
             contacts = parse_contacts(node.contact)
+            if not contacts:
+                logger.warning("parse_contacts didn't return a valid contact string.") 
+                continue
+
             if contacts not in loose_nodes_collection:
                 loose_nodes_collection[contacts] = PolicyDomain([node], pd_name)
             else:
                 loose_nodes_collection[contacts].nodes.append(node)
 
             loose_nodes_collection[contacts].client_backup_summary += node.backupresult
-
-            # Check if node has any client backups done
-            if node.backupresult.inspected > 0:
-                loose_nodes_collection[contacts].has_client_backups = True
-
-            # Also check if any node has any VM backups
-            if len(node.vm_results) > 0:
-                loose_nodes_collection[contacts].has_vm_backups = True
-
-            # Check if node has any failed schedules
-            loose_nodes_collection[contacts].has_non_successful_schedules = \
-                check_non_successful_schedules(loose_nodes_collection[contacts], node)
 
     return loose_nodes_collection
 
@@ -88,14 +77,14 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
     """
     Create mail subject and call mailer to send mail.
     """
-    if not policy_domain.has_client_backups and not policy_domain.has_vm_backups:
+    if not policy_domain.has_client_schedules() and not policy_domain.has_vm_backups():
         logger.info("No backups in 24 hours detected for %s.", policy_domain.name)
     else:
         subject_template = Template(config["mail_subject_template"])
 
         logger.info("Parsing mail template for %s.", receiver_addr)
         subject = subject_template.substitute({
-            "status": "OKAY" if not policy_domain.has_non_successful_schedules else "WARN",
+            "status": "OKAY" if not policy_domain.has_non_successful_schedules() else "WARN",
             "tsm_inst": instance,
             "pd_name": policy_domain.name,
             "time": time_string
@@ -116,9 +105,9 @@ def send_mail_reports(config: Dict[str, Any],
     time_string = current_time.strftime("%d.%m.%Y %H:%M:%S")
 
     bcc = config["mail_bcc_addr"] if "mail_bcc_addr" in config \
-        and config["mail_bcc_addr"] != "" else ""
+        and config["mail_bcc_addr"] else ""
     reply_to = config["mail_replyto_addr"] if "mail_replyto_addr" in config \
-        and config["mail_replyto_addr"] != "" else ""
+        and config["mail_replyto_addr"] else ""
 
     logger.info("Preparing mail reports...")
     for inst in config["tsm_instances"]:
@@ -127,11 +116,17 @@ def send_mail_reports(config: Dict[str, Any],
             break
 
         # Nodes to be collected when policy domain has no contact specified
-        loose_nodes: Dict[str, PolicyDomain] = {}
+        loose_nodes: Optional[Dict[str, PolicyDomain]] = {}
 
         for policy_domain in data[inst].domains.values():
-            if policy_domain.contact != "":
+            if policy_domain.contact:
                 contacts = parse_contacts(policy_domain.contact)
+                if not contacts:
+                    logger.warning("parse_contacts didn't return a \
+                                    valid contact string, skipping policy domain %s.",
+                                    policy_domain.name)
+                    continue
+
                 send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                           contacts, reply_to, bcc, inst, time_string)
             elif not loose_nodes:
@@ -142,6 +137,10 @@ def send_mail_reports(config: Dict[str, Any],
                                     PolicyDomain without contact information.")
 
         # Send mail reports for collected loose nodes
+        if not loose_nodes:
+            logger.info("No nodes in loose_nodes to process.")
+            return
+
         for contact, policy_domain in loose_nodes.items():
             send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                       contact, reply_to, bcc, inst, time_string)
@@ -151,7 +150,7 @@ def get_password(config: Dict[str, Any]) -> str:
     Try to read the password file, otherwise read it directly
     from user input using getpass.
     """
-    if config["tsm_password_file"] != "":
+    if config["tsm_password_file"]:
         if os.path.isfile(config["tsm_password_file"]):
             with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
                 pwd = pwd_file.read()
@@ -171,13 +170,13 @@ def load_config(path: str) -> Dict[str, Any]:
     if os.path.isfile(path):
         with open(path, "r", encoding="utf-8") as cfg_file:
             try:
-                print(f"Loaded config from {path}")
+                sys.stdout.write(f"Loaded config from {path}\n")
                 return yaml.safe_load(cfg_file)
             except yaml.YAMLError as exc:
-                print(exc)
+                sys.stderr.write(f'{exc}\n')
                 sys.exit(1)
     else:
-        print(f"ERROR: {path} not found.")
+        sys.stderr.write(f"ERROR: {path} not found.\n")
         sys.exit(1)
 
 def setup_logger(config: Dict[str, Any]):
@@ -201,7 +200,7 @@ def setup_logger(config: Dict[str, Any]):
             raise ValueError(f'ERROR: log_level "{config["log_level"]}" \
                               not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
     else:
-        print("WARNING: log_level argument not supplied in config, defaulting to ERROR.")
+        sys.stdout.write("WARNING: log_level argument not supplied in config, defaulting to ERROR.\n")
         log_level = logging.ERROR
 
     logger.setLevel(log_level)
@@ -232,11 +231,7 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
     """
     Render and export all reports to HTML files which have been parsed from the TSM data. 
     """
-    template_file_loader = FileSystemLoader(os.path.dirname(config["mail_template_path"]))
-    template_env = Environment(loader=template_file_loader, extensions=['jinja2.ext.do'])
-
-    template = template_env.get_template(os.path.basename(config["mail_template_path"]))
-    template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
+    template = ReportTemplate(config["mail_template_path"])
 
     for inst in config["tsm_instances"]:
         if inst not in data:
@@ -244,7 +239,7 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
             break
 
         for policy_domain in data[inst].domains.values():
-            html_test_render = template.render(pd=policy_domain)
+            html_test_render = template.render(policy_domain)
 
             with open(f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8") as file:
                 file.write(html_test_render)
@@ -313,7 +308,7 @@ def main():
     else:
         logger.info("No pickled data supplied, fetching from TSM.")
 
-    if config["tsm_instances"] is not None and not data:
+    if config["tsm_instances"] and not data:
         for inst in config["tsm_instances"]:
             data[inst] = collect_and_parse_instance(config, inst, pwd)
 
