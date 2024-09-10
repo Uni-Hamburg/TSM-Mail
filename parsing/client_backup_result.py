@@ -237,7 +237,7 @@ class ClientBackupResult:
         """
         return self.__format_elapsed_time(int(self.processing_time))
 
-    def __add__(self, other: 'ClientBackupResult') -> 'ClientBackupResult':
+    def __add__(self, other) -> 'ClientBackupResult':
         cl_res = ClientBackupResult(self.node_name)
 
         cl_res.inspected = self.inspected + other.inspected

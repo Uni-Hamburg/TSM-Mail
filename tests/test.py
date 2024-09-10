@@ -1,7 +1,9 @@
 """
 Contains various tests for the tsm_mail application.
 """
+import datetime
 import unittest
+import time_machine
 
 from parsing.policy_domain import PolicyDomain
 from parsing.node import Node
@@ -309,6 +311,9 @@ class TestParsing(unittest.TestCase):
             rendered_template_expected = f.read()
         self.assertEqual(rendered_template_expected, rendered_template)
 
+    # Use time_machine to be able to compare the rendered template to an expected, pre-rendered
+    # template with fixed dates and times.
+    @time_machine.travel(datetime.datetime(2024, 5, 1))
     def test_vm_backup_parsing(self):
         """
         Tests parsing of VM backup results.
@@ -329,12 +334,12 @@ class TestParsing(unittest.TestCase):
 
         vm_results_node_vm_a_expected = [
             mock_vm_result('VM_SCHEDULE_A', 'VM_A', False, 0, node_vm_a_name),
-            mock_vm_result('VM_SCHEDULE_A', 'VM_B', True, 999_999, node_vm_a_name),
+            mock_vm_result('VM_SCHEDULE_A', 'VM_B', True, 999_999_999_999, node_vm_a_name),
         ]
 
         vm_results_node_vm_b_expected = [
             mock_vm_result('VM_SCHEDULE_B', 'VM_C', False,0, node_vm_b_name),
-            mock_vm_result('VM_SCHEDULE_B', 'VM_D', True, 42, node_vm_b_name)
+            mock_vm_result('VM_SCHEDULE_B', 'VM_D', True, 42_000_000_000, node_vm_b_name)
         ]
 
         nodes_expected = {
@@ -365,3 +370,10 @@ class TestParsing(unittest.TestCase):
         for policy_domain_name, policy_domain in policy_domains_expected.items():
             self.assertTrue(data.domains[policy_domain_name])
             self.assertEqual(data.domains[policy_domain_name], policy_domain)
+
+        template = ReportTemplate('./templates/statusmail.j2')
+        rendered_template = template.render(data.domains[domain_vm_name])
+
+        with open('./tests/rendered_template_vm_expected.html', 'r', encoding='utf-8') as f:
+            rendered_template_expected = f.read()
+        self.assertEqual(rendered_template_expected, rendered_template)

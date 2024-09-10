@@ -80,7 +80,7 @@ class VMResult:
         """
         return self.__format_elapsed_time()
 
-    def __add__(self, other: 'VMResult') -> 'VMResult':
+    def __add__(self, other) -> 'VMResult':
         res = VMResult()
 
         res.backed_up_bytes = self.backed_up_bytes + other.backed_up_bytes
