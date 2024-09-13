@@ -102,8 +102,8 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
 
     vm_results_r = __issue_cmd(config, "SELECT schedule_name, sub_entity, start_time, end_time, "
                                        "successful, activity, activity_type, bytes, entity "
-                                       f"FROM summary_extended WHERE (activity_details='VMware'"
-                                       "OR activity_details LIKE '%Hyper%') AND start_time"
+                                       f"FROM summary_extended WHERE (activity_details='VMware' "
+                                       "OR activity_details LIKE '%Hyper%') AND start_time "
                                        f"BETWEEN '{yesterday_str}' AND '{today_str}'")
 
     vm_results_str = vm_results_r.decode("utf-8", "replace")
