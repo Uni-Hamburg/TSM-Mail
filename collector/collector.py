@@ -22,10 +22,9 @@ class CollectorConfig():
         inst: The ISP server / instance to fetch data from
         pwd: The password for the user to fetch the data with
     """
-    def __init__(self, config: Dict[str, Any], inst: str, pwd: str):
-        self.app_config = config
-        self.inst = inst
-        self.pwd = pwd
+    app_config: Dict[str, Any]
+    inst: str
+    pwd: str
 
 
 def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
