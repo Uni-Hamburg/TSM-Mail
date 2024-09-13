@@ -122,8 +122,8 @@ def send_mail_reports(config: Dict[str, Any],
             if policy_domain.contact:
                 contacts = parse_contacts(policy_domain.contact)
                 if not contacts:
-                    logger.warning("parse_contacts didn't return a \
-                                    valid contact string, skipping policy domain %s.",
+                    logger.warning("parse_contacts didn't return a "
+                                   "valid contact string, skipping policy domain %s.",
                                     policy_domain.name)
                     continue
 
@@ -133,13 +133,13 @@ def send_mail_reports(config: Dict[str, Any],
                 loose_nodes = collect_loose_nodes(policy_domain.name, policy_domain.nodes)
 
                 if not loose_nodes:
-                    logger.warning("No node has contact specified in \
-                                    PolicyDomain without contact information.")
+                    logger.warning("No node has contact specified in "
+                                   "PolicyDomain without contact information.")
 
         # Send mail reports for collected loose nodes
         if not loose_nodes:
             logger.info("No nodes in loose_nodes to process.")
-            return
+            continue
 
         for contact, policy_domain in loose_nodes.items():
             send_mail(config, mailer, policy_domain, config["mail_from_addr"],
@@ -197,8 +197,8 @@ def setup_logger(config: Dict[str, Any]):
         if config["log_level"] in log_levels:
             log_level = log_levels[config["log_level"]]
         else:
-            raise ValueError(f'ERROR: log_level "{config["log_level"]}" \
-                              not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
+            raise ValueError(f'ERROR: log_level "{config["log_level"]}" '
+                              'not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
     else:
         sys.stdout.write("WARNING: log_level argument not supplied in config, defaulting to ERROR.\n")
         log_level = logging.ERROR
