@@ -265,7 +265,7 @@ class TestParsing(unittest.TestCase):
 
         # There should be 3 policy domains and 9 nodes parsed
         self.assertEqual(len(data.domains), 3)
-        # self.assertEqual(len(data.nodes), 9)
+        self.assertEqual(len(data.nodes), 9)
 
         self.assertTrue(all(node.has_client_schedules() for node in data.nodes.values()))
 
@@ -363,7 +363,7 @@ class TestParsing(unittest.TestCase):
         data.parse_vm_schedules(vm_logs)
 
         self.assertEqual(len(data.domains), 1)
-        # self.assertEqual(len(data.nodes), 2)
+        self.assertEqual(len(data.nodes), 2)
 
         self.assertTrue(all(node.has_vm_backups() for node in data.nodes.values()))
 
