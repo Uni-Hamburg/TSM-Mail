@@ -182,7 +182,7 @@ pyrightconfig.json
 *.html
 
 # Allow html in tests
-!tests/*.html
+!tests/expected_templates/*.html
 
 # Ignore text files
 *.txt

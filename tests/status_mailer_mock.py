@@ -11,7 +11,7 @@ from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
-class StatusMailerMock():
+class StatusMailerMock:
 
     """
     StatusMailerMock mocks the smtp mailer

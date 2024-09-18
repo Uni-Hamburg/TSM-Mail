@@ -11,7 +11,7 @@ from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
-class StatusMailer():
+class StatusMailer:
     """
     StatusMailer sends mails containing status information to registered nodes.
 
