@@ -1,8 +1,10 @@
 """
 Contains various tests for the tsm_mail application.
 """
+import logging
 import datetime
 import unittest
+from typing import Dict, Any
 import time_machine
 
 from parsing.policy_domain import PolicyDomain
@@ -12,10 +14,16 @@ from parsing.tsm_data import TSMData
 from parsing.schedule_status import SchedulesParser, ScheduleStatusEnum
 from parsing.report_template import ReportTemplate
 
-from tests.mock import mock_schedule_logs_successful, mock_schedule_logs_edge_cases, \
+from tsm_mail import send_mail_reports
+
+from tests.mock import mock_node_with_schedules, mock_schedule_logs_successful, mock_schedule_logs_edge_cases, \
     mock_schedule_logs_failed, get_schedule_logs_missed, mock_node_log, \
     mock_backup_result_log, mock_backup_result, mock_schedule_logs, mock_schedules, \
     mock_policy_domain, mock_vm_result_logs, mock_vm_result
+
+from tests.status_mailer_mock import StatusMailerMock
+
+logger = logging.getLogger('main')
 
 class TestParsing(unittest.TestCase):
     """
@@ -307,7 +315,7 @@ class TestParsing(unittest.TestCase):
         template = ReportTemplate('./templates/statusmail.j2')
         rendered_template = template.render(data.domains[domain_a_name])
 
-        with open('./tests/rendered_template_expected.html', 'r', encoding='utf-8') as f:
+        with open('./tests/expected_templates/rendered_template_expected.html', 'r', encoding='utf-8') as f:
             rendered_template_expected = f.read()
         self.assertEqual(rendered_template_expected, rendered_template)
 
@@ -374,6 +382,67 @@ class TestParsing(unittest.TestCase):
         template = ReportTemplate('./templates/statusmail.j2')
         rendered_template = template.render(data.domains[domain_vm_name])
 
-        with open('./tests/rendered_template_vm_expected.html', 'r', encoding='utf-8') as f:
+        with open('./tests/expected_templates/rendered_template_vm_expected.html', 'r', encoding='utf-8') as f:
             rendered_template_expected = f.read()
         self.assertEqual(rendered_template_expected, rendered_template)
+
+    def test_send_mail_reports(self):
+        """
+        Tests parsing and sending report mails to the clients.
+        """
+
+        config: Dict[str, Any] = {
+            'mail_server_host': 'mailer.local',
+            'mail_server_port': 25,
+            'mail_template_path': './templates/statusmail.j2',
+            'mail_from_addr': 'mailer@backup_mailer.com',
+            'mail_subject_template': 'ISP: $status for $tsm_inst at $time for $pd_name',
+            'tsm_instances': ['TSMSRV1'],
+        }
+
+        mailer = StatusMailerMock(config["mail_server_host"],
+                                  config["mail_server_port"],
+                                  config["mail_template_path"])
+
+        instance_name = 'TSMSRV1'
+
+        data: Dict[str, TSMData] = {
+            instance_name: TSMData(instance_name)
+        }
+
+        node_a_name = 'NODE_A'
+        node_b_name = 'NODE_B'
+        node_loose_name = 'NODE_LOOSE'
+        node_loose_contact = 'loosenodes@nodes.com'
+
+        domain_a_name = 'DOMAIN_A'
+        domain_a_contact = 'backup@company-a.de'
+        domain_b_name = 'DOMAIN_B'
+        domain_b_contact = 'backup@company-b.com'
+        domain_loose_name = 'COLLECTION'
+
+        nodes = {
+            node_a_name: mock_node_with_schedules(node_a_name, 'Linux x86-64', domain_a_name, {
+                'SCHEDULE_A': ScheduleStatusEnum.SUCCESSFUL,
+            }),
+            node_b_name: mock_node_with_schedules(node_b_name, 'Linux x86-64', domain_b_name, {
+                'SCHEDULE_B': ScheduleStatusEnum.SUCCESSFUL,
+            }),
+            node_loose_name: mock_node_with_schedules(node_loose_name, 'Linux x86-64', domain_loose_name, {
+                'SCHEDULE_B': ScheduleStatusEnum.FAILED,
+            }, node_loose_contact),
+        }
+
+        data[instance_name].nodes = nodes
+        data[instance_name].domains = {
+            domain_a_name: PolicyDomain([nodes[node_a_name]], domain_a_name, domain_a_contact),
+            domain_b_name: PolicyDomain([nodes[node_b_name]], domain_b_name, domain_b_contact),
+            domain_loose_name: PolicyDomain([nodes[node_loose_name]], domain_loose_name)
+        }
+
+        send_mail_reports(config, mailer, data)
+
+        with open('./tests/expected_templates/test_send_mail_reports_expected.html', 'r', encoding='utf-8') as f:
+            rendered_template_expected = f.read()
+
+        self.assertEqual(rendered_template_expected, '\n'.join(m for m in mailer.rendered_mail_mocks))

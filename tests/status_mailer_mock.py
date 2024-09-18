@@ -1,19 +1,20 @@
 """
-status_mailer.py generates status mails from node and policy domain data
+Contains a mocked status mailer for testing.
 """
 
 import logging
-import smtplib
 from email.message import EmailMessage
+from typing import List
 
 from parsing.policy_domain import PolicyDomain
 from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
-class StatusMailer():
+class StatusMailerMock():
+
     """
-    StatusMailer sends mails containing status information to registered nodes.
+    StatusMailerMock mocks the smtp mailer
 
     Args:
         smtp_host:      The mailer host to connect to
@@ -28,10 +29,10 @@ class StatusMailer():
         # Load jinja2 mail HTML template
         self.__template = ReportTemplate(template_path)
 
+        # Mock rendered template
+        self.rendered_mail_mocks: List[str] = []
+
         logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
-        # Establish connection to the SMTP server
-        self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
-        self.__smtp_conn.starttls()
 
     def send_to(self, policy_domain: PolicyDomain, sender_addr: str, receiver_addr: str,
                 subject: str, replyto_addr: str, bcc_addr: str):
@@ -61,4 +62,6 @@ class StatusMailer():
         message.set_payload(message_html)
 
         logger.info("Sending report for %s to %s.", policy_domain.name, receiver_addr)
-        self.__smtp_conn.send_message(message)
+        logger.info("Message: %s", message)
+
+        self.rendered_mail_mocks.append(message_html)

@@ -2,7 +2,7 @@
 Contains several functions to mock data from the TSM environment.
 """
 
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime, timedelta
 from functools import reduce
 
@@ -240,11 +240,13 @@ def mock_backup_result(node_name: str='NODE') -> ClientBackupResult:
     return cl_backup_result
 
 def mock_node_with_schedules(node_name: str='NODE', platform_name: str='Unknown Platform',
-                             domain_name: str='DOMAIN', schedules: Dict[str, ScheduleStatusEnum]=None) -> Node:
+                             domain_name: str='DOMAIN',
+                             schedules: Optional[Dict[str, ScheduleStatusEnum]]=None,
+                             contact: str='') -> Node:
     """
     Generates a node with schedules and backup results.
     """
-    return Node(node_name, platform_name, domain_name, NODE_DECOMM_STATE_NO,
+    return Node(node_name, platform_name, domain_name, NODE_DECOMM_STATE_NO, contact,
                 backupresult=mock_backup_result(node_name),
                 schedules=mock_schedules(schedules) if schedules else {})
 
