@@ -67,7 +67,9 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, P
             else:
                 loose_nodes_collection[contacts].nodes.append(node)
 
-            loose_nodes_collection[contacts].client_backup_summary += node.backupresult
+    # TODO: Test adaptation to new policy_domain calculate_backup_summaries method
+    for pd in loose_nodes_collection.values():
+        pd.calculate_backup_summaries()
 
     return loose_nodes_collection
 

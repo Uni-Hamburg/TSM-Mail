@@ -84,14 +84,7 @@ class TSMData:
             for node in domain.nodes:
                 self.__parse_node_status(node, sched_stat_logs, cl_stat_logs)
 
-                # Add to policy v summary
-                if node.backupresult:
-                    domain.client_backup_summary += node.backupresult
-
-                    # Find maximum processing time for processing time summary cell
-                    domain.client_backup_summary.processing_time = \
-                        max(domain.client_backup_summary.processing_time,
-                            node.backupresult.processing_time)
+            domain.calculate_backup_summaries()
 
             # Sort nodes by failed objects
             domain.nodes.sort(key=lambda x: x.backupresult.failed, reverse=True)

@@ -262,9 +262,9 @@ class TestParsing(unittest.TestCase):
             domain_z_name: mock_policy_domain(domain_z_name, domain_z_contact,
             [node for node in nodes_expected.values() \
                   if node.policy_domain_name == domain_z_name]),
-            domain_loose_name: mock_policy_domain(domain_loose_name, '',
-            [node for node in nodes_expected.values() \
-                  if node.policy_domain_name == domain_loose_name]),
+            domain_loose_name: mock_policy_domain(domain_loose_name,
+                nodes=[node for node in nodes_expected.values() \
+                       if node.policy_domain_name == domain_loose_name]),
         }
 
         data = TSMData()
@@ -435,9 +435,9 @@ class TestParsing(unittest.TestCase):
 
         data[instance_name].nodes = nodes
         data[instance_name].domains = {
-            domain_a_name: PolicyDomain([nodes[node_a_name]], domain_a_name, domain_a_contact),
-            domain_b_name: PolicyDomain([nodes[node_b_name]], domain_b_name, domain_b_contact),
-            domain_loose_name: PolicyDomain([nodes[node_loose_name]], domain_loose_name)
+            domain_a_name: mock_policy_domain(domain_a_name, domain_a_contact, [nodes[node_a_name]]),
+            domain_b_name: mock_policy_domain(domain_b_name, domain_b_contact, [nodes[node_b_name]]),
+            domain_loose_name: mock_policy_domain(domain_loose_name, nodes=[nodes[node_loose_name]])
         }
 
         send_mail_reports(config, mailer, data)

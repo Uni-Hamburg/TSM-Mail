@@ -4,7 +4,6 @@ Contains several functions to mock data from the TSM environment.
 
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta
-from functools import reduce
 
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
@@ -207,7 +206,7 @@ def mock_schedule(schedule_name: str='SCHEDULE',
     """
     Generates a test schedule including the schedules status and history.
     """
-    def generate_history(schedule_status: ScheduleStatusEnum) -> List[ScheduleStatusEnum]:
+    def generate_history() -> List[ScheduleStatusEnum]:
         history = [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
         schedule_history_top = HISTORY_MAX_ITEMS - 1
 
@@ -228,7 +227,7 @@ def mock_schedule(schedule_name: str='SCHEDULE',
         return_code='0'
     )
 
-    return_status.history = generate_history(schedule_status)
+    return_status.history = generate_history()
     return return_status
 
 def mock_backup_result(node_name: str='NODE') -> ClientBackupResult:
@@ -250,22 +249,8 @@ def mock_node_with_schedules(node_name: str='NODE', platform_name: str='Unknown 
                 backupresult=mock_backup_result(node_name),
                 schedules=mock_schedules(schedules) if schedules else {})
 
-def mock_policy_domain(domain_name: str, domain_contact: str, nodes: List[Node]) -> PolicyDomain:
+def mock_policy_domain(domain_name: str, domain_contact: str='', nodes: Optional[List[Node]]=None) -> PolicyDomain:
     """
     Creates a mocked policy domain. 
     """
-    policy_domain = PolicyDomain(nodes, domain_name, domain_contact)
-    # policy_domain.client_backup_summary = sum([node.backupresult for node in policy_domain.nodes])
-
-    backupresults = [node.backupresult for node in policy_domain.nodes]
-    vm_backup_results = []
-    for node in policy_domain.nodes:
-        vm_backup_results.extend(node.vm_results)
-
-    if backupresults:
-        policy_domain.client_backup_summary += reduce(lambda s1, s2: s1 + s2, backupresults)
-
-    if vm_backup_results:
-        policy_domain.vm_backup_summary += reduce(lambda s1, s2: s1 + s2, vm_backup_results)
-
-    return policy_domain
+    return PolicyDomain(nodes, domain_name, domain_contact)

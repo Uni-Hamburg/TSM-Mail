@@ -84,7 +84,9 @@ class VMResult:
         res = VMResult()
 
         res.backed_up_bytes = self.backed_up_bytes + other.backed_up_bytes
-        res.elapsed_time = self.elapsed_time + other.elapsed_time
+        # Instead of adding up the elapsed time, show elapsed time of longest backup
+        # in summary
+        res.elapsed_time = max(self.elapsed_time, other.elapsed_time)
 
         return res
 

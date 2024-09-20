@@ -3,6 +3,7 @@ Contains PolicyDomain class which contains all relevant information to a TSM pol
 """
 
 from typing import List, Optional
+from functools import reduce
 
 from parsing.node import Node
 from parsing.client_backup_result import ClientBackupResult
@@ -26,8 +27,28 @@ class PolicyDomain:
 
         if nodes:
             self.nodes = nodes
+            self.calculate_backup_summaries()
         else:
             self.nodes = []
+
+    def calculate_backup_summaries(self):
+        '''
+        Calculates all backup summaries for policy domain.
+        '''
+        if self.nodes:
+            backupresults = [node.backupresult for node in self.nodes]
+            self.client_backup_summary = reduce(lambda s1, s2: s1 + s2, backupresults)
+
+            vm_backup_results = []
+            for node in self.nodes:
+                vm_backup_results.extend(node.vm_results)
+
+            if vm_backup_results:
+                self.vm_backup_summary = reduce(lambda s1, s2: s1 + s2, vm_backup_results)
+
+            # Reset node name in client_backup_summary
+            # (summary doesn't have a node_name)
+            self.client_backup_summary.node_name = ''
 
     def has_client_schedules(self) -> bool:
         """
