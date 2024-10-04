@@ -32,7 +32,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
     try:
         cmd_result = subprocess.check_output(
             ["dsmadmc", f"-se={config.inst}",
-             f"-id={config.app_config['tsm_user']}", f"-password={config.pwd}",
+             f"-id={config.app_config['tsm_user']}", f"-password={config.pwd.rstrip()}",
              "-dataonly=yes", "-comma", "-out", cmd])
         return cmd_result
     except subprocess.CalledProcessError as exception:
