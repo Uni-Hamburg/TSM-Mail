@@ -30,8 +30,6 @@ class StatusMailer:
         # Load jinja2 mail HTML template
         self.__template = ReportTemplate(template_path)
 
-        logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
-
     def __smtp_connected(self) -> bool:
         """
         Checks if the smtp connection is still connected or not.
@@ -52,6 +50,7 @@ class StatusMailer:
         """
         # Establish connection to the SMTP server if it is not established / timed out
         if not self.__smtp_conn or not self.__smtp_connected():
+            logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
             self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
             self.__smtp_conn.starttls()
 
