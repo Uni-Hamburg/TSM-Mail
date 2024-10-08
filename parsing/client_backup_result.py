@@ -143,7 +143,7 @@ class ClientBackupResult:
         """
 
         # Check if client log is empty
-        if len(client_log) <= 0:
+        if not client_log:
             logger.info("Provided client is log empty.")
             return
 

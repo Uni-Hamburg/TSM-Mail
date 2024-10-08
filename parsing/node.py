@@ -86,7 +86,7 @@ class Node:
         """
         Checks if node has any VMWare backup results.
         """
-        if len(self.vm_results) > 0:
+        if self.vm_results:
             return True
         return False
 
