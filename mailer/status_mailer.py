@@ -50,7 +50,7 @@ class StatusMailer:
         """
         # Establish connection to the SMTP server if it is not established / timed out
         if not self.__smtp_conn or not self.__smtp_connected():
-            logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
+            logger.info("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
             self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
             self.__smtp_conn.starttls()
 
