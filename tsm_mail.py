@@ -29,6 +29,7 @@ from collector.collector import CollectorConfig, collect_nodes_and_domains, coll
     collect_client_backup_results, collect_schedule_logs
 
 from mailer.status_mailer import StatusMailer
+from mailer.mailer import Mailer
 
 logger = logging.getLogger("main")
 
@@ -66,11 +67,12 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, P
             else:
                 loose_nodes_collection[contacts].nodes.append(node)
 
-            loose_nodes_collection[contacts].client_backup_summary += node.backupresult
+    for pd in loose_nodes_collection.values():
+        pd.calculate_backup_summaries()
 
     return loose_nodes_collection
 
-def send_mail(config: Dict[str, Any], mailer: StatusMailer,
+def send_mail(config: Dict[str, Any], mailer: Mailer,
               policy_domain: PolicyDomain, sender_addr: str,
               receiver_addr: str, reply_to: str, bcc: str,
               instance: str, time_string: str):
@@ -93,13 +95,11 @@ def send_mail(config: Dict[str, Any], mailer: StatusMailer,
         mailer.send_to(policy_domain, sender_addr, receiver_addr, subject, reply_to, bcc)
 
 def send_mail_reports(config: Dict[str, Any],
+                      mailer: Mailer,
                       data: Dict[str, TSMData]):
     """
     Prepare and send mails using the StatusMailer class.
     """
-    mailer = StatusMailer(config["mail_server_host"],
-                          config["mail_server_port"],
-                          config["mail_template_path"])
 
     current_time = datetime.now()
     time_string = current_time.strftime("%d.%m.%Y %H:%M:%S")
@@ -298,6 +298,10 @@ def main():
     setup_logger(config)
     pwd = get_password(config)
 
+    mailer = StatusMailer(config["mail_server_host"],
+                          config["mail_server_port"],
+                          config["mail_template_path"])
+
     if args.pickle:
         if os.path.isfile(args.pickle):
             logger.info("Pickled data found in %s. Loading...", args.pickle)
@@ -313,7 +317,7 @@ def main():
             data[inst] = collect_and_parse_instance(config, inst, pwd)
 
     if not args.disable_mail_send:
-        send_mail_reports(config, data)
+        send_mail_reports(config, mailer, data)
 
     if args.export:
         export_to_html(config, data)

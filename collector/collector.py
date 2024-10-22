@@ -32,7 +32,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
     try:
         cmd_result = subprocess.check_output(
             ["dsmadmc", f"-se={config.inst}",
-             f"-id={config.app_config['tsm_user']}", f"-password={config.pwd}",
+             f"-id={config.app_config['tsm_user']}", f"-password={config.pwd.rstrip()}",
              "-dataonly=yes", "-comma", "-out", cmd])
         return cmd_result
     except subprocess.CalledProcessError as exception:
@@ -57,7 +57,7 @@ def __collect_schedule_for_node(config: CollectorConfig,
     sched_stat_list = sched_stat_str.splitlines()
 
     # Don't add empty logs
-    if len(sched_stat_list) > 0:
+    if sched_stat_list:
         sched_logs[node_name] = sched_stat_list
 
 def __collect_client_backup_result(config: CollectorConfig,
@@ -73,7 +73,7 @@ def __collect_client_backup_result(config: CollectorConfig,
     cl_stat_list = cl_stat_r.decode("utf-8", "replace").splitlines()
 
     # Don't add empty logs
-    if len(cl_stat_list) > 0:
+    if cl_stat_list:
         cl_logs[node_name] = cl_stat_list
 
 def collect_nodes_and_domains(config: CollectorConfig) -> List[str]:

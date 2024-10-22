@@ -143,7 +143,7 @@ class ClientBackupResult:
         """
 
         # Check if client log is empty
-        if len(client_log) <= 0:
+        if not client_log:
             logger.info("Provided client is log empty.")
             return
 
@@ -249,7 +249,9 @@ class ClientBackupResult:
         cl_res.bytes_inspected = self.bytes_inspected + other.bytes_inspected
         cl_res.bytes_transferred = self.bytes_transferred + other.bytes_transferred
         cl_res.aggregate_data_rate = self.aggregate_data_rate + other.aggregate_data_rate
-        cl_res.processing_time = self.processing_time + other.processing_time
+        # Instead of adding up the processing time, show processing time of longest backup
+        # in summary
+        cl_res.processing_time = max(self.processing_time, other.processing_time)
 
         return cl_res
 
