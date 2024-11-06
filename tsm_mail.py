@@ -150,7 +150,7 @@ def get_password(config: Dict[str, Any]) -> str:
     Try to read the password file, otherwise read it directly
     from user input using getpass.
     """
-    if config["tsm_password_file"]:
+    if "tsm_password_file" in config:
         if os.path.isfile(config["tsm_password_file"]):
             with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
                 pwd = pwd_file.read()
@@ -213,7 +213,7 @@ def setup_logger(config: Dict[str, Any]):
     logger.addHandler(stdout_handler)
 
     if "log_path" in config:
-        if config["log_rotate"]:
+        if "log_rotate" in config:
             file_handler = logging.handlers.TimedRotatingFileHandler(
                 config["log_path"],
                 when="W0",
@@ -312,7 +312,7 @@ def main():
     else:
         logger.info("No pickled data supplied, fetching from TSM.")
 
-    if config["tsm_instances"] and not data:
+    if "tsm_instances" in config and not data:
         for inst in config["tsm_instances"]:
             data[inst] = collect_and_parse_instance(config, inst, pwd)
 
