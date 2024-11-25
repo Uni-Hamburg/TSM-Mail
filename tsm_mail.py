@@ -302,10 +302,8 @@ def main():
         config["mail_server_host"],
         config["mail_server_port"],
         config["mail_template_path"],
-        (
-            config["mail_server_username"],
-            config["mail_server_password"]
-        )
+        (config["mail_server_username"],
+        config["mail_server_password"])
     )
 
     if args.pickle:

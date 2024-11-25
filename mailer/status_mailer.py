@@ -12,9 +12,6 @@ from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
-SMTP_USERNAME = 0
-SMTP_PASSWORD = 1
-
 class StatusMailer:
     """
     StatusMailer sends mails containing status information to registered nodes.
@@ -56,10 +53,7 @@ class StatusMailer:
         self.__smtp_conn.starttls()
 
         if self.__smtp_credentials:
-            self.__smtp_conn.login(
-                self.__smtp_credentials[SMTP_USERNAME],
-                self.__smtp_credentials[SMTP_PASSWORD]
-            )
+            self.__smtp_conn.login(*self.__smtp_credentials)
 
     def send_to(self, policy_domain: PolicyDomain, sender_addr: str, receiver_addr: str,
                 subject: str, replyto_addr: str, bcc_addr: str):
