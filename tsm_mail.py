@@ -298,9 +298,15 @@ def main():
     setup_logger(config)
     pwd = get_password(config)
 
-    mailer = StatusMailer(config["mail_server_host"],
-                          config["mail_server_port"],
-                          config["mail_template_path"])
+    mailer = StatusMailer(
+        config["mail_server_host"],
+        config["mail_server_port"],
+        config["mail_template_path"],
+        (
+            config["mail_server_username"],
+            config["mail_server_password"]
+        )
+    )
 
     if args.pickle:
         if os.path.isfile(args.pickle):
