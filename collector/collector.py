@@ -5,7 +5,7 @@ Contains functions to interface with the TSM environment through the admin conso
 import subprocess
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Any, cast
+from typing import Any, cast
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
@@ -22,7 +22,7 @@ class CollectorConfig():
         inst: The ISP server / instance to fetch data from
         pwd: The password for the user to fetch the data with
     """
-    app_config: Dict[str, Any]
+    app_config: dict[str, Any]
     inst: str
     pwd: str
 
@@ -45,7 +45,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
         raise exception
 
 def __collect_schedule_for_node(config: CollectorConfig,
-                                sched_logs: Dict[str, List[str]],
+                                sched_logs: dict[str, list[str]],
                                 node_name: str):
     # Queries all schedules for a node with node_name.
     logger.info("Collecting schedule status for %s on %s...", node_name, config.inst)
@@ -61,7 +61,7 @@ def __collect_schedule_for_node(config: CollectorConfig,
         sched_logs[node_name] = sched_stat_list
 
 def __collect_client_backup_result(config: CollectorConfig,
-                                   cl_logs: Dict[str, List[str]],
+                                   cl_logs: dict[str, list[str]],
                                    node_name: str):
     # Queries client backup results for the last 24 hours for node with node_name.
     logger.info("Collecting client backup result for %s on %s...", node_name, config.inst)
@@ -76,7 +76,7 @@ def __collect_client_backup_result(config: CollectorConfig,
     if cl_stat_list:
         cl_logs[node_name] = cl_stat_list
 
-def collect_nodes_and_domains(config: CollectorConfig) -> List[str]:
+def collect_nodes_and_domains(config: CollectorConfig) -> list[str]:
     """
     Runs SQL query to get all nodes and policy domains.
     """
@@ -88,7 +88,7 @@ def collect_nodes_and_domains(config: CollectorConfig) -> List[str]:
 
     return nodes_and_domains_logs
 
-def collect_vm_schedules(config: CollectorConfig) -> List[str]:
+def collect_vm_schedules(config: CollectorConfig) -> list[str]:
     """
     Gets all status logs for the VMWare backup schedules.
     """
@@ -113,14 +113,14 @@ def collect_vm_schedules(config: CollectorConfig) -> List[str]:
 
     return vm_results_list
 
-def collect_schedule_logs(config: CollectorConfig, log: List[str]) -> Dict[str, List[str]]:
+def collect_schedule_logs(config: CollectorConfig, log: list[str]) -> dict[str, list[str]]:
     """
     Reads and returns schedule logs for a node.
     """
     sched_logs_manager = mp.Manager()
-    sched_logs = cast(Dict[str, List[str]], sched_logs_manager.dict())
+    sched_logs = cast(dict[str, list[str]], sched_logs_manager.dict())
 
-    nodes: List[str] = []
+    nodes: list[str] = []
 
     for line in log:
         nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])
@@ -131,14 +131,14 @@ def collect_schedule_logs(config: CollectorConfig, log: List[str]) -> Dict[str, 
 
     return sched_logs
 
-def collect_client_backup_results(config: CollectorConfig, log: List[str]) -> Dict[str, List[str]]:
+def collect_client_backup_results(config: CollectorConfig, log: list[str]) -> dict[str, list[str]]:
     """
     Gets all client backup results for the last 24 hours from a node.
     """
     cl_logs_manager = mp.Manager()
-    cl_logs = cast(Dict[str, List[str]], cl_logs_manager.dict())
+    cl_logs = cast(dict[str, list[str]], cl_logs_manager.dict())
 
-    nodes: List[str] = []
+    nodes: list[str] = []
 
     for line in log:
         nodes.append(line.split(LINE_DELIM)[COLUMN_NODE_NAME])

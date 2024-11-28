@@ -2,7 +2,6 @@
 Contains PolicyDomain class which contains all relevant information to a TSM policy domain.
 """
 
-from typing import List, Optional
 from functools import reduce
 
 from parsing.node import Node
@@ -15,11 +14,11 @@ class PolicyDomain:
     to determine if there have been failed schedules in the last 24 hours.
 
     Args:
-        nodes:      List of nodes associated with PolicyDomain
+        nodes:      list of nodes associated with PolicyDomain
         name:       Name of policy domain
         contact:    Contact mail for PolicyDomain
     """
-    def __init__(self, nodes: Optional[List[Node]] = None, name: str = "", contact: str = ""):
+    def __init__(self, nodes: list[Node] | None = None, name: str = "", contact: str = ""):
         self.contact = contact
         self.name = name
         self.client_backup_summary = ClientBackupResult()

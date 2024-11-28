@@ -2,8 +2,6 @@
 Contains the TSMData class, which contains all relevant information to a TSM server
 instance and relevant parsing methods for parsing the data from the server logs.
 """
-from typing import Dict, List
-
 from parsing.node import Node
 from parsing.constants import LINE_DELIM, COLUMN_NODE_NAME, COLUMN_PLATFORM_NAME, COLUMN_PD_NAME, \
     COLUMN_DECOMM_STATE, COLUMN_DOMAIN_CONTACT, COLUMN_NODE_CONTACT, COLUMN_VM_SCHED_NAME, \
@@ -24,11 +22,11 @@ class TSMData:
     """
     def __init__(self, instance_id: str = ""):
         self.instance_id: str = instance_id
-        self.nodes: Dict[str, Node] = {}
-        self.domains: Dict[str, PolicyDomain] = {}
-        self.vm_results: Dict[str, VMResult] = {}
+        self.nodes: dict[str, Node] = {}
+        self.domains: dict[str, PolicyDomain] = {}
+        self.vm_results: dict[str, VMResult] = {}
 
-    def parse_nodes(self, nodes_log: List[str]):
+    def parse_nodes(self, nodes_log: list[str]):
         """
         Parse nodes form node query logs and add to policy domain and also
         the nodes dictionary.
@@ -72,8 +70,8 @@ class TSMData:
             if domain_description_field:
                 self.domains[policy_domain_name].contact = domain_description_field
 
-    def parse_schedules_and_backup_results(self, sched_stat_logs: Dict[str, List[str]],
-                                           cl_stat_logs: Dict[str, List[str]]):
+    def parse_schedules_and_backup_results(self, sched_stat_logs: dict[str, list[str]],
+                                           cl_stat_logs: dict[str, list[str]]):
         """
         Parse client schedules and backup results.
         Insert parsed results into respective node and policy domain.
@@ -90,8 +88,8 @@ class TSMData:
             domain.nodes.sort(key=lambda x: x.backupresult.failed, reverse=True)
 
     def __parse_node_status(self, node: Node,
-                            sched_stat_logs: Dict[str, List[str]],
-                            cl_stat_logs: Dict[str, List[str]]):
+                            sched_stat_logs: dict[str, list[str]],
+                            cl_stat_logs: dict[str, list[str]]):
         # Parse results into node.
         if node.name in sched_stat_logs:
             sched_stat_log = sched_stat_logs[node.name]
@@ -109,7 +107,7 @@ class TSMData:
                 # in the last 24 hours
                 node.backupresult += parsed_cl_res
 
-    def parse_vm_schedules(self, vms_log: List[str]):
+    def parse_vm_schedules(self, vms_log: list[str]):
         """
         Parse VMWare backup schedules and insert into respective nodes.
         Calculate VMWare backup summary for each domain.

@@ -5,7 +5,6 @@ TSM client backup (e.g. bytes inspected, bytes transferred, processing time, etc
 
 import logging
 from datetime import datetime
-from typing import List
 
 import tabulate
 
@@ -137,7 +136,7 @@ class ClientBackupResult:
 
         return f"{size} {size_suffix}{'/sec' if data_rate else ''}"
 
-    def parse(self, client_log: List[str]):
+    def parse(self, client_log: list[str]):
         """
         Parse data from the client backup log.
         """

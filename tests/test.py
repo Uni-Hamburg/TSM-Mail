@@ -4,7 +4,7 @@ Contains various tests for the tsm_mail application.
 import logging
 import datetime
 import unittest
-from typing import Dict, Any
+from typing import Any
 import time_machine
 
 from parsing.policy_domain import PolicyDomain
@@ -391,7 +391,7 @@ class TestParsing(unittest.TestCase):
         Tests parsing and sending report mails to the clients.
         """
 
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             'mail_server_host': 'mailer.local',
             'mail_server_port': 25,
             'mail_template_path': './templates/statusmail.j2',
@@ -406,7 +406,7 @@ class TestParsing(unittest.TestCase):
 
         instance_name = 'TSMSRV1'
 
-        data: Dict[str, TSMData] = {
+        data: dict[str, TSMData] = {
             instance_name: TSMData(instance_name)
         }
 

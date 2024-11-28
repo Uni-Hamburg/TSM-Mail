@@ -4,7 +4,6 @@ Contains a mocked status mailer for testing.
 
 import logging
 from email.message import EmailMessage
-from typing import List
 
 from parsing.policy_domain import PolicyDomain
 from parsing.report_template import ReportTemplate
@@ -30,7 +29,7 @@ class StatusMailerMock:
         self.__template = ReportTemplate(template_path)
 
         # Mock rendered template
-        self.rendered_mail_mocks: List[str] = []
+        self.rendered_mail_mocks: list[str] = []
 
         logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
 

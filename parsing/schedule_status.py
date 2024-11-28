@@ -9,7 +9,6 @@ which is defined here aswell.
 import logging
 from datetime import datetime
 from enum import Enum, auto
-from typing import List, Dict
 
 from parsing.constants import SCHED_RETURN_CODE_DEFAULT, SCHED_ACT_START_TIME_DEFAULT, \
     SCHED_END_TIME_DEFAULT, HISTORY_MAX_ITEMS, STATUS_COMPLETED_STR, STATUS_MISSED_STR, \
@@ -59,7 +58,7 @@ class ScheduleStatus:
         self.end_time = end_time
 
         # Initialize history with "UNKNOWN" status
-        self.history: List[ScheduleStatusEnum] = \
+        self.history: list[ScheduleStatusEnum] = \
             [ScheduleStatusEnum.UNKNOWN for _ in range(HISTORY_MAX_ITEMS)]
 
     def __eq__(self, other) -> bool:
@@ -92,8 +91,8 @@ class SchedulesParser:
         }
 
     # Remove schedules which are older than 24 hours
-    def __remove_old_schedules(self, scheds: Dict[str, ScheduleStatus]) -> Dict[str, ScheduleStatus]:
-        new_scheds: Dict[str, ScheduleStatus] = {}
+    def __remove_old_schedules(self, scheds: dict[str, ScheduleStatus]) -> dict[str, ScheduleStatus]:
+        new_scheds: dict[str, ScheduleStatus] = {}
 
         for sched_name, schedule in scheds.items():
             current_date = datetime.now()
@@ -108,11 +107,11 @@ class SchedulesParser:
     def __get_line_status_str(self, line: str):
         return line.split(LINE_DELIM)[COLUMN_QE_STATUS].strip()
 
-    def parse(self, server_log: List[str]) -> Dict[str, ScheduleStatus]:
+    def parse(self, server_log: list[str]) -> dict[str, ScheduleStatus]:
         """
         Parse client schedules from the server logs.
         """
-        scheds: Dict[str, ScheduleStatus] = {}
+        scheds: dict[str, ScheduleStatus] = {}
 
         # Remove "Future" schedule from list as it is
         # not relevant for this usecase

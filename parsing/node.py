@@ -2,8 +2,6 @@
 Contains the Node class which holds all relevant information for a TSM node.
 """
 
-from typing import Dict, List, Optional
-
 from parsing.client_backup_result import ClientBackupResult
 from parsing.constants import NODE_DECOMM_STATE_YES
 from parsing.schedule_status import ScheduleStatus, ScheduleStatusEnum
@@ -29,9 +27,9 @@ class Node:
         vm_results:         VM backup schedule results associated with this node
     """
     def __init__(self, name: str, platform: str, policy_domain_name: str, decomm_state: str,
-                 contact: str = "", schedules: Optional[Dict[str, ScheduleStatus]] = None,
-                 backupresult: Optional['ClientBackupResult'] = None,
-                 vm_results: Optional[List['VMResult']] = None):
+                 contact: str = "", schedules: dict[str, ScheduleStatus] | None = None,
+                 backupresult: 'ClientBackupResult | None' = None,
+                 vm_results: list['VMResult'] | None = None):
         self.name = name
         self.policy_domain_name = policy_domain_name
         self.platform = platform

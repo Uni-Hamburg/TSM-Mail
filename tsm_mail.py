@@ -13,7 +13,7 @@ import logging
 import logging.handlers
 import argparse
 from string import Template
-from typing import Dict, List, Any, Optional
+from typing import Any
 from datetime import datetime
 
 import yaml
@@ -33,7 +33,7 @@ from mailer.mailer import Mailer
 
 logger = logging.getLogger("main")
 
-def parse_contacts(contact_str: str) -> Optional[str]:
+def parse_contacts(contact_str: str) -> str | None:
     """
     Parse e-mail strings using regex.
     """
@@ -48,12 +48,12 @@ def parse_contacts(contact_str: str) -> Optional[str]:
 
     return contacts
 
-def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, PolicyDomain]]:
+def collect_loose_nodes(pd_name: str, nodes: list[Node]) -> dict[str, PolicyDomain] | None:
     """
     Create a collection containing all nodes which have individual contacts defined
     instead of being part of a policy domain with a defined contact.
     """
-    loose_nodes_collection: Dict[str, PolicyDomain] = {}
+    loose_nodes_collection: dict[str, PolicyDomain] = {}
 
     for node in nodes:
         if node.contact:
@@ -72,7 +72,7 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, P
 
     return loose_nodes_collection
 
-def send_mail(config: Dict[str, Any], mailer: Mailer,
+def send_mail(config: dict[str, Any], mailer: Mailer,
               policy_domain: PolicyDomain, sender_addr: str,
               receiver_addr: str, reply_to: str, bcc: str,
               instance: str, time_string: str):
@@ -94,9 +94,9 @@ def send_mail(config: Dict[str, Any], mailer: Mailer,
 
         mailer.send_to(policy_domain, sender_addr, receiver_addr, subject, reply_to, bcc)
 
-def send_mail_reports(config: Dict[str, Any],
+def send_mail_reports(config: dict[str, Any],
                       mailer: Mailer,
-                      data: Dict[str, TSMData]):
+                      data: dict[str, TSMData]):
     """
     Prepare and send mails using the StatusMailer class.
     """
@@ -116,7 +116,7 @@ def send_mail_reports(config: Dict[str, Any],
             break
 
         # Nodes to be collected when policy domain has no contact specified
-        loose_nodes: Optional[Dict[str, PolicyDomain]] = {}
+        loose_nodes: dict[str, PolicyDomain] | None = {}
 
         for policy_domain in data[inst].domains.values():
             if policy_domain.contact:
@@ -145,7 +145,7 @@ def send_mail_reports(config: Dict[str, Any],
             send_mail(config, mailer, policy_domain, config["mail_from_addr"],
                       contact, reply_to, bcc, inst, time_string)
 
-def get_password(config: Dict[str, Any]) -> str:
+def get_password(config: dict[str, Any]) -> str:
     """
     Try to read the password file, otherwise read it directly
     from user input using getpass.
@@ -163,7 +163,7 @@ def get_password(config: Dict[str, Any]) -> str:
 
     return pwd
 
-def load_config(path: str) -> Dict[str, Any]:
+def load_config(path: str) -> dict[str, Any]:
     """
     Load the configuration file.
     """
@@ -179,7 +179,7 @@ def load_config(path: str) -> Dict[str, Any]:
         sys.stderr.write(f"ERROR: {path} not found.\n")
         sys.exit(1)
 
-def setup_logger(config: Dict[str, Any]):
+def setup_logger(config: dict[str, Any]):
     """
     Set up the logger, checking and setting log level and log formatting.
     Also configure rotating logs to preserve disk space.
@@ -227,7 +227,7 @@ def setup_logger(config: Dict[str, Any]):
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
+def export_to_html(config: dict[str, Any], data: dict[str, TSMData]):
     """
     Render and export all reports to HTML files which have been parsed from the TSM data. 
     """
@@ -244,7 +244,7 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
             with open(f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8") as file:
                 file.write(html_test_render)
 
-def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str) -> TSMData:
+def collect_and_parse_instance(config: dict[str, Any], inst: str, pwd: str) -> TSMData:
     """
     Collect and parse all data from a TSM server instance using the Collector class and
     parsing methods from TSMData class.
@@ -271,7 +271,7 @@ def main():
     """
     Main entrypoint.
     """
-    data: Dict[str, TSMData] = {}
+    data: dict[str, TSMData] = {}
     pwd = ""
 
     argparser = argparse.ArgumentParser(
