@@ -351,8 +351,8 @@ def main():
 
     argparser = argparse.ArgumentParser(
         prog="tsm_mail.py",
-        description="TSM Mail generates and distributes HTML \
-                     reports of an IBM TSM / ISP environment.",
+        description="TSM Mail generates and distributes HTML "
+        "reports of an IBM TSM / ISP environment.",
     )
 
     argparser.add_argument(
@@ -368,11 +368,11 @@ def main():
         action="store",
         type=str,
         metavar="PATH",
-        help="the pickle argument determines if the \
-                            fetched TSM reports should be saved to file for quicker \
-                            loading times while debugging. \
-                            NOTE: To fetch a new report, delete the pickle file or supply \
-                            a different path to the argument",
+        help="the pickle argument determines if the "
+        "fetched TSM reports should be saved to file for quicker "
+        "loading times while debugging. "
+        "NOTE: To fetch a new report, delete the pickle file or supply "
+        "a different path to the argument",
     )
     argparser.add_argument(
         "-e",
