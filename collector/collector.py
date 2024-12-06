@@ -48,7 +48,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
     except subprocess.CalledProcessError as exception:
         if "ANR2034E" in str(exception.output):
             logger.info(
-                'Query "%s" \nreturned error: "%s", ' "returning empty string.",
+                'Query "%s" \nreturned error: "%s", returning empty string.',
                 cmd,
                 exception.output,
             )
