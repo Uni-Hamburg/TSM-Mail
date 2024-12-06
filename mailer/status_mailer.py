@@ -12,6 +12,7 @@ from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
+
 class StatusMailer:
     """
     StatusMailer sends mails containing status information to registered nodes.
@@ -24,8 +25,13 @@ class StatusMailer:
                           with the SMTP server
     """
 
-    def __init__(self, smtp_host: str, smtp_port: int, template_path: str,
-                 smtp_credentials: tuple[str, str] | None=None):
+    def __init__(
+        self,
+        smtp_host: str,
+        smtp_port: int,
+        template_path: str,
+        smtp_credentials: tuple[str, str] | None = None,
+    ):
         self.__smtp_host = smtp_host
         self.__smtp_port = smtp_port
         self.__smtp_conn = None
@@ -48,15 +54,24 @@ class StatusMailer:
         return status == 250
 
     def __smtp_connect(self):
-        logger.info("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
+        logger.info(
+            "Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port
+        )
         self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
         self.__smtp_conn.starttls()
 
         if self.__smtp_credentials:
             self.__smtp_conn.login(*self.__smtp_credentials)
 
-    def send_to(self, policy_domain: PolicyDomain, sender_addr: str, receiver_addr: str,
-                subject: str, replyto_addr: str, bcc_addr: str):
+    def send_to(
+        self,
+        policy_domain: PolicyDomain,
+        sender_addr: str,
+        receiver_addr: str,
+        subject: str,
+        replyto_addr: str,
+        bcc_addr: str,
+    ):
         """
         Renders the mail template and sends it using the smtp library.
         """
@@ -82,8 +97,8 @@ class StatusMailer:
         # Render HTML template of message containing node data from TSM nodes
         message_html = self.__template.render(policy_domain)
 
-        message.add_header('Content-Type', 'text/html')
-        message.add_header('X-Auto-Response-Suppress', 'All')
+        message.add_header("Content-Type", "text/html")
+        message.add_header("X-Auto-Response-Suppress", "All")
         message.set_payload(message_html)
 
         logger.info("Sending report for %s to %s.", policy_domain.name, receiver_addr)
