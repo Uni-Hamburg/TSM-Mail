@@ -428,5 +428,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         logger.exception(e)
