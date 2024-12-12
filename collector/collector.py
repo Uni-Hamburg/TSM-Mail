@@ -30,7 +30,9 @@ class CollectorConfig:
 
 
 def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
-    # Sends a command to the TSM server using the admin console 'dsmadmc'.
+    """
+    Sends a command to the TSM server using the admin console 'dsmadmc'.
+    """
     try:
         cmd_result = subprocess.check_output(
             [
