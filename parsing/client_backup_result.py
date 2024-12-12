@@ -5,22 +5,34 @@ TSM client backup (e.g. bytes inspected, bytes transferred, processing time, etc
 
 import logging
 from datetime import datetime
-from typing import List
 
 import tabulate
 
-from parsing.constants import SESSION_NUM_DELIM, TDP_MSSQL_STR, \
-    INSPECTED_STR, BACKED_UP_STR, UPDATED_STR, EXPIRED_STR, FAILED_STR, RETRIES_STR, \
-    BYTES_INSPECTED_STR, BYTES_TRANSFERRED_STR, AGGREGATE_DATA_RATE_STR, PROCESSING_TIME_STR
+from parsing.constants import (
+    SESSION_NUM_DELIM,
+    TDP_MSSQL_STR,
+    INSPECTED_STR,
+    BACKED_UP_STR,
+    UPDATED_STR,
+    EXPIRED_STR,
+    FAILED_STR,
+    RETRIES_STR,
+    BYTES_INSPECTED_STR,
+    BYTES_TRANSFERRED_STR,
+    AGGREGATE_DATA_RATE_STR,
+    PROCESSING_TIME_STR,
+)
 
 logger = logging.getLogger("main")
+
 
 class ClientBackupResult:
     """
     ClientBackupResult parses backup results from activity log and holds
     the parsed data.
     """
-    def __init__(self, node_name: str=""):
+
+    def __init__(self, node_name: str = ""):
         self.inspected = 0
         self.backed_up = 0
         self.updated = 0
@@ -92,7 +104,7 @@ class ClientBackupResult:
         line_num = line_strip.split(SESSION_NUM_DELIM)[0].replace(".", "")
 
         # Convert from US to EU notation
-        line_num = line_num.replace(',', '.')
+        line_num = line_num.replace(",", ".")
 
         # Default value for line
         num = 0.0
@@ -115,7 +127,7 @@ class ClientBackupResult:
 
     def __convert_notation(self, num_string: str) -> str:
         # Convert from US notation to EU notation
-        return num_string.replace('.', 'x').replace(',', '.').replace('x', ',')
+        return num_string.replace(".", "x").replace(",", ".").replace("x", ",")
 
     def __format_num_str(self, num: float, precision: int = 2) -> str:
         if precision == 0:
@@ -124,8 +136,14 @@ class ClientBackupResult:
             num_format = format(num, f",.{precision}f")
         return self.__convert_notation(num_format)
 
-    def __parse_size_string(self, size_bytes: float, size_suffix: str, data_rate: bool = False,
-                            remove_suffix: bool = False, precision: int = 2) -> str:
+    def __parse_size_string(
+        self,
+        size_bytes: float,
+        size_suffix: str,
+        data_rate: bool = False,
+        remove_suffix: bool = False,
+        precision: int = 2,
+    ) -> str:
         # Parses bytes as float to a size string, e.g. "300 MB/sec".
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
 
@@ -137,7 +155,7 @@ class ClientBackupResult:
 
         return f"{size} {size_suffix}{'/sec' if data_rate else ''}"
 
-    def parse(self, client_log: List[str]):
+    def parse(self, client_log: list[str]):
         """
         Parse data from the client backup log.
         """
@@ -169,7 +187,9 @@ class ClientBackupResult:
             if BYTES_TRANSFERRED_STR in item:
                 self.bytes_transferred = self.__parse_line(item, BYTES_TRANSFERRED_STR)
             if AGGREGATE_DATA_RATE_STR in item:
-                self.aggregate_data_rate = self.__parse_line(item, AGGREGATE_DATA_RATE_STR)
+                self.aggregate_data_rate = self.__parse_line(
+                    item, AGGREGATE_DATA_RATE_STR
+                )
             if PROCESSING_TIME_STR in item:
                 self.processing_time = self.__parse_line(item, PROCESSING_TIME_STR)
 
@@ -214,22 +234,27 @@ class ClientBackupResult:
         Returns a formatted string for "bytes_inspected".
         """
         return self.__parse_size_string(
-            self.bytes_inspected, self.bytes_inspected_unit, remove_suffix=True)
+            self.bytes_inspected, self.bytes_inspected_unit, remove_suffix=True
+        )
 
     def bytes_transferred_str(self):
         """
         Returns a formatted string for "bytes_transferred".
         """
         return self.__parse_size_string(
-            self.bytes_transferred, self.bytes_transferred_unit, remove_suffix=True)
+            self.bytes_transferred, self.bytes_transferred_unit, remove_suffix=True
+        )
 
     def aggregate_data_rate_str(self):
         """
         Returns a formatted string for "aggregate_data_rate".
         """
         return self.__parse_size_string(
-            self.aggregate_data_rate, self.aggregate_data_rate_unit,
-            remove_suffix=True, data_rate=True)
+            self.aggregate_data_rate,
+            self.aggregate_data_rate_unit,
+            remove_suffix=True,
+            data_rate=True,
+        )
 
     def processing_time_str(self):
         """
@@ -237,7 +262,7 @@ class ClientBackupResult:
         """
         return self.__format_elapsed_time(int(self.processing_time))
 
-    def __add__(self, other) -> 'ClientBackupResult':
+    def __add__(self, other) -> "ClientBackupResult":
         cl_res = ClientBackupResult(self.node_name)
 
         cl_res.inspected = self.inspected + other.inspected
@@ -248,7 +273,9 @@ class ClientBackupResult:
         cl_res.retries = self.retries + other.retries
         cl_res.bytes_inspected = self.bytes_inspected + other.bytes_inspected
         cl_res.bytes_transferred = self.bytes_transferred + other.bytes_transferred
-        cl_res.aggregate_data_rate = self.aggregate_data_rate + other.aggregate_data_rate
+        cl_res.aggregate_data_rate = (
+            self.aggregate_data_rate + other.aggregate_data_rate
+        )
         # Instead of adding up the processing time, show processing time of longest backup
         # in summary
         cl_res.processing_time = max(self.processing_time, other.processing_time)
@@ -256,33 +283,37 @@ class ClientBackupResult:
         return cl_res
 
     def __str__(self):
-        table = tabulate.tabulate([
-            ["Inspected:", self.inspected],
-            ["Backed up:", self.backed_up],
-            ["Updated:", self.updated],
-            ["Expired:", self.expired],
-            ["Failed:", self.failed],
-            ["Retries:", self.retries],
-            ["Bytes inspected:", self.bytes_inspected],
-            ["Bytes transferred:", self.bytes_transferred],
-            ["Aggregate data rate:", self.aggregate_data_rate],
-            ["Processing time:", self.processing_time],
-        ])
+        table = tabulate.tabulate(
+            [
+                ["Inspected:", self.inspected],
+                ["Backed up:", self.backed_up],
+                ["Updated:", self.updated],
+                ["Expired:", self.expired],
+                ["Failed:", self.failed],
+                ["Retries:", self.retries],
+                ["Bytes inspected:", self.bytes_inspected],
+                ["Bytes transferred:", self.bytes_transferred],
+                ["Aggregate data rate:", self.aggregate_data_rate],
+                ["Processing time:", self.processing_time],
+            ]
+        )
 
         return f"Data of node: {self.node_name}\n{table}"
 
     def __eq__(self, other) -> bool:
-        return self.inspected == other.inspected and \
-               self.backed_up == other.backed_up and \
-               self.updated == other.updated and \
-               self.expired == other.expired and \
-               self.failed == other.failed and \
-               self.retries == other.retries and \
-               self.bytes_inspected == other.bytes_inspected and \
-               self.bytes_inspected_unit == other.bytes_inspected_unit and \
-               self.bytes_transferred == other.bytes_transferred and \
-               self.bytes_transferred_unit == other.bytes_transferred_unit and \
-               self.aggregate_data_rate == other.aggregate_data_rate and \
-               self.aggregate_data_rate_unit == other.aggregate_data_rate_unit and \
-               self.processing_time == other.processing_time and \
-               self.node_name == other.node_name
+        return (
+            self.inspected == other.inspected
+            and self.backed_up == other.backed_up
+            and self.updated == other.updated
+            and self.expired == other.expired
+            and self.failed == other.failed
+            and self.retries == other.retries
+            and self.bytes_inspected == other.bytes_inspected
+            and self.bytes_inspected_unit == other.bytes_inspected_unit
+            and self.bytes_transferred == other.bytes_transferred
+            and self.bytes_transferred_unit == other.bytes_transferred_unit
+            and self.aggregate_data_rate == other.aggregate_data_rate
+            and self.aggregate_data_rate_unit == other.aggregate_data_rate_unit
+            and self.processing_time == other.processing_time
+            and self.node_name == other.node_name
+        )

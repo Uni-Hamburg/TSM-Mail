@@ -13,7 +13,7 @@ import logging
 import logging.handlers
 import argparse
 from string import Template
-from typing import Dict, List, Any, Optional
+from typing import Any
 from datetime import datetime
 
 import yaml
@@ -21,45 +21,60 @@ import yaml
 from parsing.tsm_data import TSMData
 from parsing.node import Node
 from parsing.policy_domain import PolicyDomain
-from parsing.constants import LOG_LEVEL_DEBUG_STR, LOG_LEVEL_ERROR_STR, LOG_LEVEL_INFO_STR, \
-    LOG_LEVEL_WARN_STR
+from parsing.constants import (
+    LOG_LEVEL_DEBUG_STR,
+    LOG_LEVEL_ERROR_STR,
+    LOG_LEVEL_INFO_STR,
+    LOG_LEVEL_WARN_STR,
+)
 from parsing.report_template import ReportTemplate
 
-from collector.collector import CollectorConfig, collect_nodes_and_domains, collect_vm_schedules, \
-    collect_client_backup_results, collect_schedule_logs
+from collector.collector import (
+    CollectorConfig,
+    collect_nodes_and_domains,
+    collect_vm_schedules,
+    collect_client_backup_results,
+    collect_schedule_logs,
+)
 
 from mailer.status_mailer import StatusMailer
 from mailer.mailer import Mailer
 
 logger = logging.getLogger("main")
 
-def parse_contacts(contact_str: str) -> Optional[str]:
+
+def parse_contacts(contact_str: str) -> str | None:
     """
     Parse e-mail strings using regex.
     """
     # Mail regex for validating mail addresses
-    regex = r'(\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7},? *\b)+'
+    regex = r"(\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7},? *\b)+"
 
     contacts = contact_str.replace(";", ",")
 
     if not re.fullmatch(regex, contacts):
-        logger.error("Error validating mail address: %s. Mail address is not valid.", contacts)
+        logger.error(
+            "Error validating mail address: %s. Mail address is not valid.", contacts
+        )
         return None
 
     return contacts
 
-def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, PolicyDomain]]:
+
+def collect_loose_nodes(
+    pd_name: str, nodes: list[Node]
+) -> dict[str, PolicyDomain] | None:
     """
     Create a collection containing all nodes which have individual contacts defined
     instead of being part of a policy domain with a defined contact.
     """
-    loose_nodes_collection: Dict[str, PolicyDomain] = {}
+    loose_nodes_collection: dict[str, PolicyDomain] = {}
 
     for node in nodes:
         if node.contact:
             contacts = parse_contacts(node.contact)
             if not contacts:
-                logger.warning("parse_contacts didn't return a valid contact string.") 
+                logger.warning("parse_contacts didn't return a valid contact string.")
                 continue
 
             if contacts not in loose_nodes_collection:
@@ -72,10 +87,18 @@ def collect_loose_nodes(pd_name: str, nodes: List[Node]) -> Optional[Dict[str, P
 
     return loose_nodes_collection
 
-def send_mail(config: Dict[str, Any], mailer: Mailer,
-              policy_domain: PolicyDomain, sender_addr: str,
-              receiver_addr: str, reply_to: str, bcc: str,
-              instance: str, time_string: str):
+
+def send_mail(
+    config: dict[str, Any],
+    mailer: Mailer,
+    policy_domain: PolicyDomain,
+    sender_addr: str,
+    receiver_addr: str,
+    reply_to: str,
+    bcc: str,
+    instance: str,
+    time_string: str,
+):
     """
     Create mail subject and call mailer to send mail.
     """
@@ -85,18 +108,25 @@ def send_mail(config: Dict[str, Any], mailer: Mailer,
         subject_template = Template(config["mail_subject_template"])
 
         logger.info("Parsing mail template for %s.", receiver_addr)
-        subject = subject_template.substitute({
-            "status": "OKAY" if not policy_domain.has_non_successful_schedules() else "WARN",
-            "tsm_inst": instance,
-            "pd_name": policy_domain.name,
-            "time": time_string
-        })
+        subject = subject_template.substitute(
+            {
+                "status": (
+                    "OKAY"
+                    if not policy_domain.has_non_successful_schedules()
+                    else "WARN"
+                ),
+                "tsm_inst": instance,
+                "pd_name": policy_domain.name,
+                "time": time_string,
+            }
+        )
 
-        mailer.send_to(policy_domain, sender_addr, receiver_addr, subject, reply_to, bcc)
+        mailer.send_to(
+            policy_domain, sender_addr, receiver_addr, subject, reply_to, bcc
+        )
 
-def send_mail_reports(config: Dict[str, Any],
-                      mailer: Mailer,
-                      data: Dict[str, TSMData]):
+
+def send_mail_reports(config: dict[str, Any], mailer: Mailer, data: dict[str, TSMData]):
     """
     Prepare and send mails using the StatusMailer class.
     """
@@ -104,10 +134,16 @@ def send_mail_reports(config: Dict[str, Any],
     current_time = datetime.now()
     time_string = current_time.strftime("%d.%m.%Y %H:%M:%S")
 
-    bcc = config["mail_bcc_addr"] if "mail_bcc_addr" in config \
-        and config["mail_bcc_addr"] else ""
-    reply_to = config["mail_replyto_addr"] if "mail_replyto_addr" in config \
-        and config["mail_replyto_addr"] else ""
+    bcc = (
+        config["mail_bcc_addr"]
+        if "mail_bcc_addr" in config and config["mail_bcc_addr"]
+        else ""
+    )
+    reply_to = (
+        config["mail_replyto_addr"]
+        if "mail_replyto_addr" in config and config["mail_replyto_addr"]
+        else ""
+    )
 
     logger.info("Preparing mail reports...")
     for inst in config["tsm_instances"]:
@@ -116,25 +152,40 @@ def send_mail_reports(config: Dict[str, Any],
             break
 
         # Nodes to be collected when policy domain has no contact specified
-        loose_nodes: Optional[Dict[str, PolicyDomain]] = {}
+        loose_nodes: dict[str, PolicyDomain] | None = {}
 
         for policy_domain in data[inst].domains.values():
             if policy_domain.contact:
                 contacts = parse_contacts(policy_domain.contact)
                 if not contacts:
-                    logger.warning("parse_contacts didn't return a "
-                                   "valid contact string, skipping policy domain %s.",
-                                    policy_domain.name)
+                    logger.warning(
+                        "parse_contacts didn't return a "
+                        "valid contact string, skipping policy domain %s.",
+                        policy_domain.name,
+                    )
                     continue
 
-                send_mail(config, mailer, policy_domain, config["mail_from_addr"],
-                          contacts, reply_to, bcc, inst, time_string)
+                send_mail(
+                    config,
+                    mailer,
+                    policy_domain,
+                    config["mail_from_addr"],
+                    contacts,
+                    reply_to,
+                    bcc,
+                    inst,
+                    time_string,
+                )
             elif not loose_nodes:
-                loose_nodes = collect_loose_nodes(policy_domain.name, policy_domain.nodes)
+                loose_nodes = collect_loose_nodes(
+                    policy_domain.name, policy_domain.nodes
+                )
 
                 if not loose_nodes:
-                    logger.warning("No node has contact specified in "
-                                   "PolicyDomain without contact information.")
+                    logger.warning(
+                        "No node has contact specified in "
+                        "PolicyDomain without contact information."
+                    )
 
         # Send mail reports for collected loose nodes
         if not loose_nodes:
@@ -142,10 +193,20 @@ def send_mail_reports(config: Dict[str, Any],
             continue
 
         for contact, policy_domain in loose_nodes.items():
-            send_mail(config, mailer, policy_domain, config["mail_from_addr"],
-                      contact, reply_to, bcc, inst, time_string)
+            send_mail(
+                config,
+                mailer,
+                policy_domain,
+                config["mail_from_addr"],
+                contact,
+                reply_to,
+                bcc,
+                inst,
+                time_string,
+            )
 
-def get_password(config: Dict[str, Any]) -> str:
+
+def get_password(config: dict[str, Any]) -> str:
     """
     Try to read the password file, otherwise read it directly
     from user input using getpass.
@@ -155,15 +216,18 @@ def get_password(config: Dict[str, Any]) -> str:
             with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
                 pwd = pwd_file.read()
         else:
-            logger.error('Password file "%s" supplied in config does not exist.',
-                         config["tsm_password_file"])
+            logger.error(
+                'Password file "%s" supplied in config does not exist.',
+                config["tsm_password_file"],
+            )
             sys.exit(1)
     else:
         pwd = getpass.getpass()
 
     return pwd
 
-def load_config(path: str) -> Dict[str, Any]:
+
+def load_config(path: str) -> dict[str, Any]:
     """
     Load the configuration file.
     """
@@ -173,13 +237,14 @@ def load_config(path: str) -> Dict[str, Any]:
                 sys.stdout.write(f"Loaded config from {path}\n")
                 return yaml.safe_load(cfg_file)
             except yaml.YAMLError as exc:
-                sys.stderr.write(f'{exc}\n')
+                sys.stderr.write(f"{exc}\n")
                 sys.exit(1)
     else:
         sys.stderr.write(f"ERROR: {path} not found.\n")
         sys.exit(1)
 
-def setup_logger(config: Dict[str, Any]):
+
+def setup_logger(config: dict[str, Any]):
     """
     Set up the logger, checking and setting log level and log formatting.
     Also configure rotating logs to preserve disk space.
@@ -188,7 +253,7 @@ def setup_logger(config: Dict[str, Any]):
         LOG_LEVEL_DEBUG_STR: logging.DEBUG,
         LOG_LEVEL_INFO_STR: logging.INFO,
         LOG_LEVEL_WARN_STR: logging.WARN,
-        LOG_LEVEL_ERROR_STR: logging.ERROR
+        LOG_LEVEL_ERROR_STR: logging.ERROR,
     }
 
     log_level = None
@@ -197,15 +262,21 @@ def setup_logger(config: Dict[str, Any]):
         if config["log_level"] in log_levels:
             log_level = log_levels[config["log_level"]]
         else:
-            raise ValueError(f'ERROR: log_level "{config["log_level"]}" '
-                              'not recognized. Accepted values: DEBUG, INFO, WARN, ERROR')
+            raise ValueError(
+                f'ERROR: log_level "{config["log_level"]}" '
+                "not recognized. Accepted values: DEBUG, INFO, WARN, ERROR"
+            )
     else:
-        sys.stdout.write("WARNING: log_level argument not supplied in config, defaulting to ERROR.\n")
+        sys.stdout.write(
+            "WARNING: log_level argument not supplied in config, defaulting to ERROR.\n"
+        )
         log_level = logging.ERROR
 
     logger.setLevel(log_level)
 
-    formatter = logging.Formatter("[%(levelname)s] %(asctime)s, %(module)s: %(message)s")
+    formatter = logging.Formatter(
+        "[%(levelname)s] %(asctime)s, %(module)s: %(message)s"
+    )
     stdout_handler = logging.StreamHandler()
     stdout_handler.setLevel(log_level)
     stdout_handler.setFormatter(formatter)
@@ -215,10 +286,7 @@ def setup_logger(config: Dict[str, Any]):
     if "log_path" in config:
         if "log_rotate" in config:
             file_handler = logging.handlers.TimedRotatingFileHandler(
-                config["log_path"],
-                when="W0",
-                interval=1,
-                backupCount=0
+                config["log_path"], when="W0", interval=1, backupCount=0
             )
         else:
             file_handler = logging.FileHandler(config["log_path"])
@@ -227,9 +295,10 @@ def setup_logger(config: Dict[str, Any]):
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
+
+def export_to_html(config: dict[str, Any], data: dict[str, TSMData]):
     """
-    Render and export all reports to HTML files which have been parsed from the TSM data. 
+    Render and export all reports to HTML files which have been parsed from the TSM data.
     """
     template = ReportTemplate(config["mail_template_path"])
 
@@ -241,10 +310,13 @@ def export_to_html(config: Dict[str, Any], data: Dict[str, TSMData]):
         for policy_domain in data[inst].domains.values():
             html_test_render = template.render(policy_domain)
 
-            with open(f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8") as file:
+            with open(
+                f"{inst}_{policy_domain.name}_report.html", "w", encoding="utf-8"
+            ) as file:
                 file.write(html_test_render)
 
-def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str) -> TSMData:
+
+def collect_and_parse_instance(config: dict[str, Any], inst: str, pwd: str) -> TSMData:
     """
     Collect and parse all data from a TSM server instance using the Collector class and
     parsing methods from TSMData class.
@@ -256,7 +328,9 @@ def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str) -> T
 
     # Collect logs for each node
     node_schedule_logs = collect_schedule_logs(collector_config, nodes_and_domains)
-    client_backup_logs = collect_client_backup_results(collector_config, nodes_and_domains)
+    client_backup_logs = collect_client_backup_results(
+        collector_config, nodes_and_domains
+    )
 
     data = TSMData()
 
@@ -267,30 +341,50 @@ def collect_and_parse_instance(config: Dict[str, Any], inst: str, pwd: str) -> T
 
     return data
 
+
 def main():
     """
     Main entrypoint.
     """
-    data: Dict[str, TSMData] = {}
+    data: dict[str, TSMData] = {}
     pwd = ""
 
     argparser = argparse.ArgumentParser(
         prog="tsm_mail.py",
-        description="TSM Mail generates and distributes HTML \
-                     reports of an IBM TSM / ISP environment.")
+        description="TSM Mail generates and distributes HTML "
+        "reports of an IBM TSM / ISP environment.",
+    )
 
-    argparser.add_argument("-c", "--config", # Config file argument
-                           metavar="PATH", help="path to config file", required=True)
-    argparser.add_argument("-p", "--pickle", action="store", type=str,
-                           metavar="PATH", help="the pickle argument determines if the \
-                            fetched TSM reports should be saved to file for quicker \
-                            loading times while debugging. \
-                            NOTE: To fetch a new report, delete the pickle file or supply \
-                            a different path to the argument")
-    argparser.add_argument("-e", "--export", action="store_true",
-                           help="create HTML files of generated reports")
-    argparser.add_argument("--disable-mail-send", action="store_true",
-                           help="disable actually sending the mails for debugging purposes")
+    argparser.add_argument(
+        "-c",
+        "--config",  # Config file argument
+        metavar="PATH",
+        help="path to config file",
+        required=True,
+    )
+    argparser.add_argument(
+        "-p",
+        "--pickle",
+        action="store",
+        type=str,
+        metavar="PATH",
+        help="the pickle argument determines if the "
+        "fetched TSM reports should be saved to file for quicker "
+        "loading times while debugging. "
+        "NOTE: To fetch a new report, delete the pickle file or supply "
+        "a different path to the argument",
+    )
+    argparser.add_argument(
+        "-e",
+        "--export",
+        action="store_true",
+        help="create HTML files of generated reports",
+    )
+    argparser.add_argument(
+        "--disable-mail-send",
+        action="store_true",
+        help="disable actually sending the mails for debugging purposes",
+    )
 
     args = argparser.parse_args()
 
@@ -298,9 +392,12 @@ def main():
     setup_logger(config)
     pwd = get_password(config)
 
-    mailer = StatusMailer(config["mail_server_host"],
-                          config["mail_server_port"],
-                          config["mail_template_path"])
+    mailer = StatusMailer(
+        config["mail_server_host"],
+        config["mail_server_port"],
+        config["mail_template_path"],
+        (config["mail_server_username"], config["mail_server_password"]),
+    )
 
     if args.pickle:
         if os.path.isfile(args.pickle):
@@ -327,5 +424,9 @@ def main():
         with open(args.pickle, "wb") as pickle_file:
             pickle.dump(data, pickle_file)
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e: # pylint: disable=broad-except
+        logger.exception(e)

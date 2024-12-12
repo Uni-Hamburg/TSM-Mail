@@ -41,7 +41,9 @@ Below an explanation for every config entry.
 `tsm_password_file`: File containing the password for the TSM user. (`str`)
 
 `mail_server_host`: SMTP host address. (`str`) \
-`mail_server_port`: SMTP host port. (`int`)
+`mail_server_port`: SMTP host port. (`int`) \
+`mail_server_username`: SMTP username. A connection without authentication will be attempted if no credentials are provided.  (`str`) \
+`mail_server_password`: SMTP password. (`str`)
 
 `mail_subject_template`: String containing the mail template. Valid placeholders currently are:
  * `$status` &rarr; Status of policy domain ("OKAY" = all clients successfully completed their backups, "WARN" = there were some errors / not finished schedules)

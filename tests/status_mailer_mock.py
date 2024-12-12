@@ -4,15 +4,14 @@ Contains a mocked status mailer for testing.
 
 import logging
 from email.message import EmailMessage
-from typing import List
 
 from parsing.policy_domain import PolicyDomain
 from parsing.report_template import ReportTemplate
 
 logger = logging.getLogger("main")
 
-class StatusMailerMock:
 
+class StatusMailerMock:
     """
     StatusMailerMock mocks the smtp mailer
 
@@ -30,12 +29,21 @@ class StatusMailerMock:
         self.__template = ReportTemplate(template_path)
 
         # Mock rendered template
-        self.rendered_mail_mocks: List[str] = []
+        self.rendered_mail_mocks: list[str] = []
 
-        logger.debug("Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port)
+        logger.debug(
+            "Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port
+        )
 
-    def send_to(self, policy_domain: PolicyDomain, sender_addr: str, receiver_addr: str,
-                subject: str, replyto_addr: str, bcc_addr: str):
+    def send_to(
+        self,
+        policy_domain: PolicyDomain,
+        sender_addr: str,
+        receiver_addr: str,
+        subject: str,
+        replyto_addr: str,
+        bcc_addr: str,
+    ):
         """
         Renders the mail template and sends it using the smtp library.
         """
@@ -57,8 +65,8 @@ class StatusMailerMock:
         # Render HTML template of message containing node data from TSM nodes
         message_html = self.__template.render(policy_domain)
 
-        message.add_header('Content-Type', 'text/html')
-        message.add_header('X-Auto-Response-Suppress', 'All')
+        message.add_header("Content-Type", "text/html")
+        message.add_header("X-Auto-Response-Suppress", "All")
         message.set_payload(message_html)
 
         logger.info("Sending report for %s to %s.", policy_domain.name, receiver_addr)

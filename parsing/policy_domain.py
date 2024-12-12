@@ -2,12 +2,12 @@
 Contains PolicyDomain class which contains all relevant information to a TSM policy domain.
 """
 
-from typing import List, Optional
 from functools import reduce
 
 from parsing.node import Node
 from parsing.client_backup_result import ClientBackupResult
 from parsing.vmresult import VMResult
+
 
 class PolicyDomain:
     """
@@ -15,11 +15,14 @@ class PolicyDomain:
     to determine if there have been failed schedules in the last 24 hours.
 
     Args:
-        nodes:      List of nodes associated with PolicyDomain
+        nodes:      list of nodes associated with PolicyDomain
         name:       Name of policy domain
         contact:    Contact mail for PolicyDomain
     """
-    def __init__(self, nodes: Optional[List[Node]] = None, name: str = "", contact: str = ""):
+
+    def __init__(
+        self, nodes: list[Node] | None = None, name: str = "", contact: str = ""
+    ):
         self.contact = contact
         self.name = name
         self.client_backup_summary = ClientBackupResult()
@@ -32,9 +35,9 @@ class PolicyDomain:
             self.nodes = []
 
     def calculate_backup_summaries(self):
-        '''
+        """
         Calculates all backup summaries for policy domain.
-        '''
+        """
         if self.nodes:
             backupresults = [node.backupresult for node in self.nodes]
             self.client_backup_summary = reduce(lambda s1, s2: s1 + s2, backupresults)
@@ -44,11 +47,13 @@ class PolicyDomain:
                 vm_backup_results.extend(node.vm_results)
 
             if vm_backup_results:
-                self.vm_backup_summary = reduce(lambda s1, s2: s1 + s2, vm_backup_results)
+                self.vm_backup_summary = reduce(
+                    lambda s1, s2: s1 + s2, vm_backup_results
+                )
 
             # Reset node name in client_backup_summary
             # (summary doesn't have a node_name)
-            self.client_backup_summary.node_name = ''
+            self.client_backup_summary.node_name = ""
 
     def has_client_schedules(self) -> bool:
         """
@@ -70,8 +75,10 @@ class PolicyDomain:
         return any(node.has_vm_backups() for node in self.nodes)
 
     def __eq__(self, other) -> bool:
-        return self.contact == other.contact and \
-               self.name == other.name and \
-               self.client_backup_summary == other.client_backup_summary and \
-               self.vm_backup_summary == other.vm_backup_summary and \
-               self.nodes == other.nodes
+        return (
+            self.contact == other.contact
+            and self.name == other.name
+            and self.client_backup_summary == other.client_backup_summary
+            and self.vm_backup_summary == other.vm_backup_summary
+            and self.nodes == other.nodes
+        )
