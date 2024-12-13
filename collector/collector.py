@@ -63,7 +63,9 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
 def __collect_schedule_for_node(
     config: CollectorConfig, sched_logs: dict[str, list[str]], node_name: str
 ):
-    # Queries all schedules for a node with node_name.
+    """
+    Queries all schedules for a node with node_name.
+    """
     logger.info("Collecting schedule status for %s on %s...", node_name, config.inst)
 
     sched_stat_r = __issue_cmd(
@@ -81,7 +83,9 @@ def __collect_schedule_for_node(
 def __collect_client_backup_result(
     config: CollectorConfig, cl_logs: dict[str, list[str]], node_name: str
 ):
-    # Queries client backup results for the last 24 hours for node with node_name.
+    """
+    Queries client backup results for the last 24 hours for node with node_name.
+    """
     logger.info(
         "Collecting client backup result for %s on %s...", node_name, config.inst
     )
