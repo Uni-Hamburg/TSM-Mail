@@ -75,9 +75,13 @@ tsm_password_file: "./pwd.txt"
 
 mail_server_host: "mail-serv.com"
 mail_server_port: 25
+mail_server_username: "mailer"
+mail_server_password: "password"
 
 mail_subject_template: "ISP: $status for $tsm_inst at $time for $pd_name"
 mail_from_addr: "backup@company.org"
+mail_bcc_addr: "backup.rrz@uni-hamburg.de"
+mail_replyto_addr: "rrz-serviceline@uni-hamburg.de"
 
 mail_template_path: "./templates/statusmail.j2"
 
