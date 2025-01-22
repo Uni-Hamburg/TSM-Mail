@@ -41,6 +41,7 @@ from mailer.status_mailer import StatusMailer
 from mailer.mailer import Mailer
 
 logger = logging.getLogger("main")
+__VERSION__ = "0.11.0"
 
 
 def parse_contacts(contact_str: str) -> str | None:
@@ -385,6 +386,7 @@ def main():
         action="store_true",
         help="disable actually sending the mails for debugging purposes",
     )
+    argparser.add_argument('--version', action='version', version=f'%(prog)s {__VERSION__}')
 
     args = argparser.parse_args()
 
