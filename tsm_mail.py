@@ -386,7 +386,9 @@ def main():
         action="store_true",
         help="disable actually sending the mails for debugging purposes",
     )
-    argparser.add_argument('--version', action='version', version=f'%(prog)s {__VERSION__}')
+    argparser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__VERSION__}"
+    )
 
     args = argparser.parse_args()
 
