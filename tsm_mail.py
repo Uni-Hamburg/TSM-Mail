@@ -4,7 +4,6 @@
 Main entrypoint to the TSM mail program.
 """
 
-import getpass
 import re
 import os
 import sys
@@ -207,27 +206,6 @@ def send_mail_reports(config: dict[str, Any], mailer: Mailer, data: dict[str, TS
             )
 
 
-def get_password(config: dict[str, Any]) -> str:
-    """
-    Try to read the password file, otherwise read it directly
-    from user input using getpass.
-    """
-    if "tsm_password_file" in config:
-        if os.path.isfile(config["tsm_password_file"]):
-            with open(config["tsm_password_file"], "r", encoding="utf-8") as pwd_file:
-                pwd = pwd_file.read()
-        else:
-            logger.error(
-                'Password file "%s" supplied in config does not exist.',
-                config["tsm_password_file"],
-            )
-            sys.exit(1)
-    else:
-        pwd = getpass.getpass()
-
-    return pwd
-
-
 def load_config(path: str) -> dict[str, Any]:
     """
     Load the configuration file.
@@ -317,12 +295,12 @@ def export_to_html(config: dict[str, Any], data: dict[str, TSMData]):
                 file.write(html_test_render)
 
 
-def collect_and_parse_instance(config: dict[str, Any], inst: str, pwd: str) -> TSMData:
+def collect_and_parse_instance(config: dict[str, Any], inst: str) -> TSMData:
     """
     Collect and parse all data from a TSM server instance using the Collector class and
     parsing methods from TSMData class.
     """
-    collector_config = CollectorConfig(config, inst, pwd)
+    collector_config = CollectorConfig(config, inst)
     # Collect overall data from the environment
     nodes_and_domains = collect_nodes_and_domains(collector_config)
     vms_list = collect_vm_schedules(collector_config)
@@ -348,7 +326,6 @@ def main():
     Main entrypoint.
     """
     data: dict[str, TSMData] = {}
-    pwd = ""
 
     argparser = argparse.ArgumentParser(
         prog="tsm_mail.py",
@@ -394,7 +371,6 @@ def main():
 
     config = load_config(args.config)
     setup_logger(config)
-    pwd = get_password(config)
 
     mailer = StatusMailer(
         config["mail_server_host"],
@@ -415,7 +391,7 @@ def main():
 
     if "tsm_instances" in config and not data:
         for inst in config["tsm_instances"]:
-            data[inst] = collect_and_parse_instance(config, inst, pwd)
+            data[inst] = collect_and_parse_instance(config, inst)
 
     if not args.disable_mail_send:
         send_mail_reports(config, mailer, data)

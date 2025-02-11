@@ -37,8 +37,7 @@ the nodes contact will be omitted and the policy domains contact will be used in
 The mail generator is configured through a config yaml file.
 Below an explanation for every config entry.
 
-`tsm_user`: Username used to connect to TSM. (`str`) \
-`tsm_password_file`: File containing the password for the TSM user. (`str`)
+`tsm_credentials_file`: File containing the username and password for TSM. (`str`)
 
 `mail_server_host`: SMTP host address. (`str`) \
 `mail_server_port`: SMTP host port. (`int`) \
@@ -70,8 +69,7 @@ Below an explanation for every config entry.
 ### Config template
 
 ```yaml
-tsm_user: "MAILER"
-tsm_password_file: "./pwd.txt"
+tsm_credentials_file: "./creds.txt"
 
 mail_server_host: "mail-serv.com"
 mail_server_port: 25

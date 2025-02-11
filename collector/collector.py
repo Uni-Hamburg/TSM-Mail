@@ -21,12 +21,10 @@ class CollectorConfig:
     Args:
         config: Software configuration (config file)
         inst: The ISP server / instance to fetch data from
-        pwd: The password for the user to fetch the data with
     """
 
     app_config: dict[str, Any]
     inst: str
-    pwd: str
 
 
 def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
@@ -38,8 +36,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
             [
                 "dsmadmc",
                 f"-se={config.inst}",
-                f"-id={config.app_config['tsm_user']}",
-                f"-password={config.pwd.rstrip()}",
+                f"-credentialsfile={config.app_config['tsm_credentials_file']}",
                 "-dataonly=yes",
                 "-comma",
                 "-out",
