@@ -7,19 +7,18 @@ tsm_mail.py is the main entrypoint.
 ## Usage
 
 ```
-usage: tsm_mail.py [-h] -c PATH [-p PATH] [-e] [--disable-mail-send]
+usage: tsm_mail.py [-h] -c PATH [-p PATH] [-e] [--disable-mail-send] [--version]
 
 TSM Mail generates and distributes HTML reports of an IBM TSM / ISP environment.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -c PATH, --config PATH
-                        path to config file
-  -p PATH, --pickle PATH
-                        the pickle argument determines if the fetched TSM reports should be saved to file for quicker loading times while debugging.
-                        NOTE: To fetch a new report, delete the pickle file or supply a different path to the argument
-  -e, --export          create HTML files of generated reports
-  --disable-mail-send   disable actually sending the mails for debugging purposes
+options:
+  -h, --help           show this help message and exit
+  -c, --config PATH    path to config file
+  -p, --pickle PATH    the pickle argument determines if the fetched TSM reports should be saved to file for quicker loading times while debugging.
+                       NOTE: To fetch a new report, delete the pickle file or supply a different path to the argument
+  -e, --export         create HTML files of generated reports
+  --disable-mail-send  disable actually sending the mails for debugging purposes
+  --version            show program's version number and exit
 ```
 
 ### Node & Policy Domain EMail configuration
