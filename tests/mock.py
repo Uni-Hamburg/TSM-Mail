@@ -257,7 +257,7 @@ def mock_vm_result(
 
 
 def mock_schedules(
-    schedule_names_and_status: dict[str, ScheduleStatusEnum]
+    schedule_names_and_status: dict[str, ScheduleStatusEnum],
 ) -> dict[str, ScheduleStatus]:
     """
     Generates test schedules using the provided dictionary with name and status.

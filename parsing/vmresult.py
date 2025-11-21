@@ -23,7 +23,7 @@ class VMResult:
         entity:                 Name of VMWare TDP entity
     """
 
-    def __calculate_elapsed_time(self) -> timedelta:
+    def _calculate_elapsed_time(self) -> timedelta:
         # Caclulate the elapsed time in the format MM:SS
         start_time_d = datetime.strptime(self.start_time, "%Y-%m-%d %H:%M:%S")
         end_time_d = datetime.strptime(self.end_time, "%Y-%m-%d %H:%M:%S")
@@ -56,24 +56,24 @@ class VMResult:
         self.entity = entity
 
         if start_time:
-            self.elapsed_time = self.__calculate_elapsed_time()
+            self.elapsed_time = self._calculate_elapsed_time()
         else:
             self.elapsed_time = timedelta()
 
-    def __convert_notation(self, num_string: str) -> str:
+    def _convert_notation(self, num_string: str) -> str:
         # Convert from US notation to EU notation.
         return num_string.replace(".", "x").replace(",", ".").replace("x", ",")
 
-    def __format_backed_up_bytes(self, precision: int = 2) -> str:
+    def _format_backed_up_bytes(self, precision: int = 2) -> str:
         # Format and return backed up bytes as string.
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
         size = format(
             self.backed_up_bytes / units[self.backed_up_bytes_unit], f",.{precision}f"
         )
 
-        return self.__convert_notation(size)
+        return self._convert_notation(size)
 
-    def __format_elapsed_time(self) -> str:
+    def _format_elapsed_time(self) -> str:
         # Format elapsed time for node and return as string.
         minutes, seconds = divmod(int(self.elapsed_time.total_seconds()), 60)
         hours, minutes = divmod(minutes, 60)
@@ -84,13 +84,13 @@ class VMResult:
         """
         Returns a formatted string for "backed_up_bytes".
         """
-        return self.__format_backed_up_bytes()
+        return self._format_backed_up_bytes()
 
     def elapsed_time_str(self):
         """
         Returns a formatted string for "elapsed_time".
         """
-        return self.__format_elapsed_time()
+        return self._format_elapsed_time()
 
     def __add__(self, other) -> "VMResult":
         res = VMResult()

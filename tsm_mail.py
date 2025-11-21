@@ -40,7 +40,7 @@ from mailer.status_mailer import StatusMailer
 from mailer.mailer import Mailer
 
 logger = logging.getLogger("main")
-__VERSION__ = "0.12.0"
+__VERSION__ = "0.13.0"
 
 
 def parse_contacts(contact_str: str) -> str | None:
@@ -254,7 +254,7 @@ def setup_logger(config: dict[str, Any]):
     logger.setLevel(log_level)
 
     formatter = logging.Formatter(
-        "[%(levelname)s] %(asctime)s, %(module)s: %(message)s"
+        "%(asctime)s - [%(levelname)-8s], %(module)s: %(message)s"
     )
     stdout_handler = logging.StreamHandler()
     stdout_handler.setLevel(log_level)

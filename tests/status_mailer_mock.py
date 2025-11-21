@@ -22,17 +22,17 @@ class StatusMailerMock:
     """
 
     def __init__(self, smtp_host: str, smtp_port: int, template_path: str):
-        self.__smtp_host = smtp_host
-        self.__smtp_port = smtp_port
+        self._smtp_host = smtp_host
+        self._smtp_port = smtp_port
 
         # Load jinja2 mail HTML template
-        self.__template = ReportTemplate(template_path)
+        self._template = ReportTemplate(template_path)
 
         # Mock rendered template
         self.rendered_mail_mocks: list[str] = []
 
         logger.debug(
-            "Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port
+            "Connecting to %s at port %s...", self._smtp_host, self._smtp_port
         )
 
     def send_to(
@@ -63,7 +63,7 @@ class StatusMailerMock:
             logger.info("No Bcc configured. Skipping.")
 
         # Render HTML template of message containing node data from TSM nodes
-        message_html = self.__template.render(policy_domain)
+        message_html = self._template.render(policy_domain)
 
         message.add_header("Content-Type", "text/html")
         message.add_header("X-Auto-Response-Suppress", "All")

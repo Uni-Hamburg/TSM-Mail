@@ -19,17 +19,17 @@ class ReportTemplate:
 
     def __init__(self, template_path: str):
         # Load jinja2 mail HTML template
-        self.__template_file_loader = FileSystemLoader(os.path.dirname(template_path))
-        self.__template_env = Environment(
-            loader=self.__template_file_loader, extensions=["jinja2.ext.do"]
+        self._template_file_loader = FileSystemLoader(os.path.dirname(template_path))
+        self._template_env = Environment(
+            loader=self._template_file_loader, extensions=["jinja2.ext.do"]
         )
-        self.__template = self.__template_env.get_template(
+        self._template = self._template_env.get_template(
             os.path.basename(template_path)
         )
-        self.__template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
+        self._template.globals["ScheduleStatusEnum"] = ScheduleStatusEnum
 
     def render(self, policy_domain: PolicyDomain) -> str:
         """
         Renders the report template and returns a HTML string.
         """
-        return self.__template.render(pd=policy_domain)
+        return self._template.render(pd=policy_domain)

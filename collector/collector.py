@@ -27,7 +27,7 @@ class CollectorConfig:
     inst: str
 
 
-def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
+def _issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
     """
     Sends a command to the TSM server using the admin console 'dsmadmc'.
     """
@@ -57,7 +57,7 @@ def __issue_cmd(config: CollectorConfig, cmd: str) -> bytes:
         raise exception
 
 
-def __collect_schedule_for_node(
+def _collect_schedule_for_node(
     config: CollectorConfig, sched_logs: dict[str, list[str]], node_name: str
 ):
     """
@@ -65,7 +65,7 @@ def __collect_schedule_for_node(
     """
     logger.info("Collecting schedule status for %s on %s...", node_name, config.inst)
 
-    sched_stat_r = __issue_cmd(
+    sched_stat_r = _issue_cmd(
         config,
         f"QUERY EVENT * * node={node_name} " "f=d begint=now endd=today begind=-15",
     )
@@ -77,7 +77,7 @@ def __collect_schedule_for_node(
         sched_logs[node_name] = sched_stat_list
 
 
-def __collect_client_backup_result(
+def _collect_client_backup_result(
     config: CollectorConfig, cl_logs: dict[str, list[str]], node_name: str
 ):
     """
@@ -87,7 +87,7 @@ def __collect_client_backup_result(
         "Collecting client backup result for %s on %s...", node_name, config.inst
     )
 
-    cl_stat_r = __issue_cmd(
+    cl_stat_r = _issue_cmd(
         config,
         "SELECT nodename, message FROM actlog "
         "WHERE originator = 'CLIENT' "
@@ -105,7 +105,7 @@ def collect_nodes_and_domains(config: CollectorConfig) -> list[str]:
     """
     Runs SQL query to get all nodes and policy domains.
     """
-    nodes_r = __issue_cmd(
+    nodes_r = _issue_cmd(
         config,
         "SELECT n.node_name, n.platform_name, n.domain_name, "
         "n.decomm_state, d.description, n.contact FROM nodes n, domains d "
@@ -129,7 +129,7 @@ def collect_vm_schedules(config: CollectorConfig) -> list[str]:
 
     logger.info("Collecting VMWare schedules on %s...", config.inst)
 
-    vm_results_r = __issue_cmd(
+    vm_results_r = _issue_cmd(
         config,
         "SELECT schedule_name, sub_entity, start_time, end_time, "
         "successful, activity, activity_type, bytes, entity "
@@ -162,7 +162,7 @@ def collect_schedule_logs(
 
     with mp.Pool() as pool:
         pool.starmap(
-            __collect_schedule_for_node,
+            _collect_schedule_for_node,
             [(config, sched_logs, node_name) for node_name in nodes],
         )
 
@@ -185,7 +185,7 @@ def collect_client_backup_results(
 
     with mp.Pool() as pool:
         pool.starmap(
-            __collect_client_backup_result,
+            _collect_client_backup_result,
             [(config, cl_logs, node_name) for node_name in nodes],
         )
 

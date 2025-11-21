@@ -32,36 +32,36 @@ class StatusMailer:
         template_path: str,
         smtp_credentials: tuple[str, str] | None = None,
     ):
-        self.__smtp_host = smtp_host
-        self.__smtp_port = smtp_port
-        self.__smtp_conn = None
-        self.__smtp_credentials = smtp_credentials
+        self._smtp_host = smtp_host
+        self._smtp_port = smtp_port
+        self._smtp_conn = None
+        self._smtp_credentials = smtp_credentials
 
         # Load jinja2 mail HTML template
-        self.__template = ReportTemplate(template_path)
+        self._template = ReportTemplate(template_path)
 
-    def __smtp_connected(self) -> bool:
+    def _smtp_connected(self) -> bool:
         """
         Checks if the smtp connection is still connected or not.
         """
-        if not self.__smtp_conn:
+        if not self._smtp_conn:
             return False
 
         try:
-            status = self.__smtp_conn.noop()[0]
+            status = self._smtp_conn.noop()[0]
         except SMTPException:
             status = -1
         return status == 250
 
-    def __smtp_connect(self):
+    def _smtp_connect(self):
         logger.info(
-            "Connecting to %s at port %s...", self.__smtp_host, self.__smtp_port
+            "Connecting to %s at port %s...", self._smtp_host, self._smtp_port
         )
-        self.__smtp_conn = smtplib.SMTP(self.__smtp_host, self.__smtp_port)
-        self.__smtp_conn.starttls()
+        self._smtp_conn = smtplib.SMTP(self._smtp_host, self._smtp_port)
+        self._smtp_conn.starttls()
 
-        if self.__smtp_credentials:
-            self.__smtp_conn.login(*self.__smtp_credentials)
+        if self._smtp_credentials:
+            self._smtp_conn.login(*self._smtp_credentials)
 
     def send_to(
         self,
@@ -76,8 +76,8 @@ class StatusMailer:
         Renders the mail template and sends it using the smtp library.
         """
         # Establish connection to the SMTP server if it is not established / timed out
-        if not self.__smtp_conn or not self.__smtp_connected():
-            self.__smtp_connect()
+        if not self._smtp_conn or not self._smtp_connected():
+            self._smtp_connect()
 
         message = EmailMessage()
         message["Subject"] = subject
@@ -95,11 +95,11 @@ class StatusMailer:
             logger.info("No Bcc configured. Skipping.")
 
         # Render HTML template of message containing node data from TSM nodes
-        message_html = self.__template.render(policy_domain)
+        message_html = self._template.render(policy_domain)
 
         message.add_header("Content-Type", "text/html")
         message.add_header("X-Auto-Response-Suppress", "All")
         message.set_payload(message_html)
 
         logger.info("Sending report for %s to %s.", policy_domain.name, receiver_addr)
-        self.__smtp_conn.send_message(message)
+        self._smtp_conn.send_message(message)

@@ -106,14 +106,14 @@ class TSMData:
         """
         for _, domain in self.domains.items():
             for node in domain.nodes:
-                self.__parse_node_status(node, sched_stat_logs, cl_stat_logs)
+                self._parse_node_status(node, sched_stat_logs, cl_stat_logs)
 
             domain.calculate_backup_summaries()
 
             # Sort nodes by failed objects
             domain.nodes.sort(key=lambda x: x.backupresult.failed, reverse=True)
 
-    def __parse_node_status(
+    def _parse_node_status(
         self,
         node: Node,
         sched_stat_logs: dict[str, list[str]],

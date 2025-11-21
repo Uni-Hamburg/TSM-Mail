@@ -107,7 +107,7 @@ class SchedulesParser:
 
         # Mapping of the schedule status string returned from TSM
         # to the enum type ScheduleStatusEnum
-        self.__schedule_status = {
+        self._schedule_status = {
             STATUS_COMPLETED_STR: ScheduleStatusEnum.SUCCESSFUL,
             STATUS_MISSED_STR: ScheduleStatusEnum.MISSED,
             STATUS_FAILED_STR: ScheduleStatusEnum.FAILED,
@@ -120,7 +120,7 @@ class SchedulesParser:
         }
 
     # Remove schedules which are older than 24 hours
-    def __remove_old_schedules(
+    def _remove_old_schedules(
         self, scheds: dict[str, ScheduleStatus]
     ) -> dict[str, ScheduleStatus]:
         new_scheds: dict[str, ScheduleStatus] = {}
@@ -135,7 +135,7 @@ class SchedulesParser:
 
         return new_scheds
 
-    def __get_line_status_str(self, line: str):
+    def _get_line_status_str(self, line: str):
         return line.split(LINE_DELIM)[COLUMN_QE_STATUS].strip()
 
     def parse(self, server_log: list[str]) -> dict[str, ScheduleStatus]:
@@ -148,7 +148,7 @@ class SchedulesParser:
         # not relevant for this usecase
         server_log = list(
             filter(
-                lambda line: self.__get_line_status_str(line) != STATUS_FUTURE_STR,
+                lambda line: self._get_line_status_str(line) != STATUS_FUTURE_STR,
                 server_log,
             )
         )
@@ -161,8 +161,8 @@ class SchedulesParser:
                 scheds[line_split[COLUMN_QE_SCHED_NAME]] = ScheduleStatus()
 
             sched_stat = scheds[line_split[COLUMN_QE_SCHED_NAME]]
-            if line_split[COLUMN_QE_STATUS] in self.__schedule_status:
-                sched_stat.status = self.__schedule_status[line_split[COLUMN_QE_STATUS]]
+            if line_split[COLUMN_QE_STATUS] in self._schedule_status:
+                sched_stat.status = self._schedule_status[line_split[COLUMN_QE_STATUS]]
             else:
                 sched_stat.status = ScheduleStatusEnum.UNKNOWN
 
@@ -205,4 +205,4 @@ class SchedulesParser:
                             HISTORY_MAX_ITEMS - date_diff.days
                         ] = sched_stat.status
 
-        return self.__remove_old_schedules(scheds)
+        return self._remove_old_schedules(scheds)

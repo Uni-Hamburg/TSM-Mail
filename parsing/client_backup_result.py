@@ -53,14 +53,14 @@ class ClientBackupResult:
 
         self.node_name = node_name
 
-    def __parse_size(self, size: str) -> float:
+    def _parse_size(self, size: str) -> float:
         # Parse memory sizes to bytes as int
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
 
         number, unit = [string.strip() for string in size.split()]
         return float(number) * units[unit]
 
-    def __parse_elapsed_time(self, line: str) -> int:
+    def _parse_elapsed_time(self, line: str) -> int:
         # Parse the elapsed time of backup schedule
         # (format is 00:00:00 instead of elapsed seconds total)
         # into seconds as int
@@ -81,22 +81,22 @@ class ClientBackupResult:
         # Parse elapsed time
         return (time.hour + line_excess_hours) * 3600 + time.minute * 60 + time.second
 
-    def __format_elapsed_time(self, time: int) -> str:
+    def _format_elapsed_time(self, time: int) -> str:
         minutes, seconds = divmod(time, 60)
         hours, minutes = divmod(minutes, 60)
 
         # Return timestamp with two digit numbers
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-    def __parse_line(self, line: str, search_str: str) -> float:
+    def _parse_line(self, line: str, search_str: str) -> float:
         # Parse data from supplied log line
 
         # Search for search string and return value after search string
         line_split = line.split(search_str, 1)[1]
 
-        return self.__parse_item_float(line_split)
+        return self._parse_item_float(line_split)
 
-    def __parse_item_float(self, line: str) -> float:
+    def _parse_item_float(self, line: str) -> float:
         # Remove all whitespace
         line_strip = line.strip()
 
@@ -114,10 +114,10 @@ class ClientBackupResult:
             # Replace "," with "." (german notation)
             # and remove "/sec" if data rate is provided
             line_num = line_num.replace(",", ".").strip().removesuffix("/sec")
-            num = self.__parse_size(line_num)
+            num = self._parse_size(line_num)
         # Check if line contains timestamp
         elif ":" in line_num:
-            num = self.__parse_elapsed_time(line_num)
+            num = self._parse_elapsed_time(line_num)
         # Else output integer directly
         else:
             num = line_num
@@ -125,18 +125,18 @@ class ClientBackupResult:
         # Return parsed number
         return float(num)
 
-    def __convert_notation(self, num_string: str) -> str:
+    def _convert_notation(self, num_string: str) -> str:
         # Convert from US notation to EU notation
         return num_string.replace(".", "x").replace(",", ".").replace("x", ",")
 
-    def __format_num_str(self, num: float, precision: int = 2) -> str:
+    def _format_num_str(self, num: float, precision: int = 2) -> str:
         if precision == 0:
             num_format = format(int(num), ",d")
         else:
             num_format = format(num, f",.{precision}f")
-        return self.__convert_notation(num_format)
+        return self._convert_notation(num_format)
 
-    def __parse_size_string(
+    def _parse_size_string(
         self,
         size_bytes: float,
         size_suffix: str,
@@ -148,7 +148,7 @@ class ClientBackupResult:
         units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9, "TB": 10**12}
 
         size = format(size_bytes / units[size_suffix], f",.{precision}f")
-        size = self.__convert_notation(size)
+        size = self._convert_notation(size)
 
         if remove_suffix:
             return size
@@ -171,69 +171,69 @@ class ClientBackupResult:
                 continue
 
             if INSPECTED_STR in item:
-                self.inspected = self.__parse_line(item, INSPECTED_STR)
+                self.inspected = self._parse_line(item, INSPECTED_STR)
             if BACKED_UP_STR in item:
-                self.backed_up = self.__parse_line(item, BACKED_UP_STR)
+                self.backed_up = self._parse_line(item, BACKED_UP_STR)
             if UPDATED_STR in item:
-                self.updated = self.__parse_line(item, UPDATED_STR)
+                self.updated = self._parse_line(item, UPDATED_STR)
             if EXPIRED_STR in item:
-                self.expired = self.__parse_line(item, EXPIRED_STR)
+                self.expired = self._parse_line(item, EXPIRED_STR)
             if FAILED_STR in item:
-                self.failed = self.__parse_line(item, FAILED_STR)
+                self.failed = self._parse_line(item, FAILED_STR)
             if RETRIES_STR in item:
-                self.retries = self.__parse_line(item, RETRIES_STR)
+                self.retries = self._parse_line(item, RETRIES_STR)
             if BYTES_INSPECTED_STR in item:
-                self.bytes_inspected = self.__parse_line(item, BYTES_INSPECTED_STR)
+                self.bytes_inspected = self._parse_line(item, BYTES_INSPECTED_STR)
             if BYTES_TRANSFERRED_STR in item:
-                self.bytes_transferred = self.__parse_line(item, BYTES_TRANSFERRED_STR)
+                self.bytes_transferred = self._parse_line(item, BYTES_TRANSFERRED_STR)
             if AGGREGATE_DATA_RATE_STR in item:
-                self.aggregate_data_rate = self.__parse_line(
+                self.aggregate_data_rate = self._parse_line(
                     item, AGGREGATE_DATA_RATE_STR
                 )
             if PROCESSING_TIME_STR in item:
-                self.processing_time = self.__parse_line(item, PROCESSING_TIME_STR)
+                self.processing_time = self._parse_line(item, PROCESSING_TIME_STR)
 
     def inspected_str(self):
         """
         Returns a formatted string for "inspected".
         """
-        return self.__format_num_str(self.inspected, precision=0)
+        return self._format_num_str(self.inspected, precision=0)
 
     def backed_up_str(self):
         """
         Returns a formatted string for "backed_up".
         """
-        return self.__format_num_str(self.backed_up, precision=0)
+        return self._format_num_str(self.backed_up, precision=0)
 
     def updated_str(self):
         """
         Returns a formatted string for "updated".
         """
-        return self.__format_num_str(self.updated, precision=0)
+        return self._format_num_str(self.updated, precision=0)
 
     def expired_str(self):
         """
         Returns a formatted string for "expired".
         """
-        return self.__format_num_str(self.expired, precision=0)
+        return self._format_num_str(self.expired, precision=0)
 
     def failed_str(self):
         """
         Returns a formatted string for "failed".
         """
-        return self.__format_num_str(self.failed, precision=0)
+        return self._format_num_str(self.failed, precision=0)
 
     def retries_str(self):
         """
         Returns a formatted string for "retries".
         """
-        return self.__format_num_str(self.retries, precision=0)
+        return self._format_num_str(self.retries, precision=0)
 
     def bytes_inspected_str(self):
         """
         Returns a formatted string for "bytes_inspected".
         """
-        return self.__parse_size_string(
+        return self._parse_size_string(
             self.bytes_inspected, self.bytes_inspected_unit, remove_suffix=True
         )
 
@@ -241,7 +241,7 @@ class ClientBackupResult:
         """
         Returns a formatted string for "bytes_transferred".
         """
-        return self.__parse_size_string(
+        return self._parse_size_string(
             self.bytes_transferred, self.bytes_transferred_unit, remove_suffix=True
         )
 
@@ -249,7 +249,7 @@ class ClientBackupResult:
         """
         Returns a formatted string for "aggregate_data_rate".
         """
-        return self.__parse_size_string(
+        return self._parse_size_string(
             self.aggregate_data_rate,
             self.aggregate_data_rate_unit,
             remove_suffix=True,
@@ -260,7 +260,7 @@ class ClientBackupResult:
         """
         Returns a formatted string for "processing_time".
         """
-        return self.__format_elapsed_time(int(self.processing_time))
+        return self._format_elapsed_time(int(self.processing_time))
 
     def __add__(self, other) -> "ClientBackupResult":
         cl_res = ClientBackupResult(self.node_name)
