@@ -54,9 +54,7 @@ class StatusMailer:
         return status == 250
 
     def _smtp_connect(self):
-        logger.info(
-            "Connecting to %s at port %s...", self._smtp_host, self._smtp_port
-        )
+        logger.info("Connecting to %s at port %s...", self._smtp_host, self._smtp_port)
         self._smtp_conn = smtplib.SMTP(self._smtp_host, self._smtp_port)
         self._smtp_conn.starttls()
 

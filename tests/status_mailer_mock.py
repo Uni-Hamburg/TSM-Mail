@@ -31,9 +31,7 @@ class StatusMailerMock:
         # Mock rendered template
         self.rendered_mail_mocks: list[str] = []
 
-        logger.debug(
-            "Connecting to %s at port %s...", self._smtp_host, self._smtp_port
-        )
+        logger.debug("Connecting to %s at port %s...", self._smtp_host, self._smtp_port)
 
     def send_to(
         self,

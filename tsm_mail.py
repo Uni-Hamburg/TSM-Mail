@@ -219,7 +219,7 @@ def load_config(path: str) -> dict[str, Any]:
                 sys.stderr.write(f"{exc}\n")
                 sys.exit(1)
     else:
-        sys.stderr.write(f"ERROR: {path} not found.\n")
+        sys.stderr.write(f'ERROR: Config file "{path}" not found.\n')
         sys.exit(1)
 
 
@@ -338,7 +338,7 @@ def main():
         "--config",  # Config file argument
         metavar="PATH",
         help="path to config file",
-        required=True,
+        default="./config.yaml",
     )
     argparser.add_argument(
         "-p",
